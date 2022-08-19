@@ -13,6 +13,7 @@ library(shiny)
 library(ggplot2)
 library(readxl)
 library(tidyverse)
+library(shinyWidgets)
 
 sss<-read_excel(path = "Data/Prioritization_Tool_11Aug2022.xlsx", sheet = "Data")
 sss$Percent_EOs_BLM<-as.numeric(sss$Percent_EOs_BLM)
@@ -23,36 +24,61 @@ source('Prioritization-function.R', local = T)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
+    chooseSliderSkin("Big"), # 'Shiny', 'Flat', 'Modern', 'Nice', 'Simple', 'HTML5', 'Round' and 'Square'
 
-    # Application title
-    titlePanel("Species Prioritization Tool"),
+    fluidRow(style = "padding-left: 30px; padding-top: 20px;",
+             
+             img(src = "ns_logo.png"),
+             
+             h1("BLM SSS Prioritization Tool")
+    ),
     
     # Inputs for prioritization tool
     fluidRow(style = "padding-left: 50px; padding-top: 10px;",
              
              fluidRow(
-               h3("Thresholds for Species Prioritization"),
+               h3("Input thresholds for species prioritization"),
                column(width = 4,
                       fluidRow(h4("Practical Conservation Value >")),
-                      fluidRow(selectInput(inputId = "threshold.practical", choices = c(1:5), selected = 3, label = "", width = "95%"))),
+                      fluidRow(selectInput(inputId = "threshold.practical", choices = c(1:5), selected = 3, label = "", width = "25%"))),
                column(width = 4,
                       fluidRow(h4("Partnering Opportunities >")),
-                      fluidRow(selectInput(inputId = "threshold.partner", choices = c(1:5), selected = 3, label = "", width = "95%"))),
-               sliderInput("threshold.overlap",
-                           "Percent of species distribution on BLM-Administered Lands",
-                           min = 1,
-                           max = 100,
-                           value = 30)
+                      fluidRow(selectInput(inputId = "threshold.partner", choices = c(1:5), selected = 3, label = "", width = "25%")))
              ),
              
-             fluidRow(
+             fluidRow(style = "padding-top: 15px;",
+                      column(width = 5,
+                             sliderInput("threshold.eo",
+                                         "Stewardship responsibility: Percent of species' EOs on BLM-Administered Lands >",
+                                         min = 1,
+                                         max = 100,
+                                         value = 30)),
+                      column(width = 5,
+                             sliderInput("threshold.model",
+                                         "Stewardship responsibility: Percent of modeled species distribution on BLM-Administered Lands >",
+                                         min = 1,
+                                         max = 100,
+                                         value = 30*.7))
+                      )
+             ),
+    
+    ##View results         
+    fluidRow(style = "padding-left: 50px; padding-top: 10px;",
+        fluidRow(h3("View and filter prioritization results")),
+             
+        column(width = 6,
                plotOutput("distPlot"),
-               
-               column(2, style = "padding-left: 0;", selectizeInput("selected_Tier", "Filter by Tier", choices = c("Tier 1", "Tier 2", "Tier 3", "Tier 4"), selected = "Tier 1")),
-               
-               tableOutput("data.table")
-             )
-             )
+               h4("Fig 1. Number of taxa in each Tier based on prioritization criteria.")),
+        
+        column(width = 4,
+               selectizeInput("selected_Tier", "Filter results by Tier", choices = c("Tier 1", "Tier 2", "Tier 3", "Tier 4"), selected = "Tier 1", width = "50%"),
+               tableOutput("data.table"))
+     ),
+    
+    ##about the app
+    fluidRow(style = "padding-left: 50px; padding-top: 10px;",
+             h4("This application was developed by NatureServe for the Bureau of Land Management. It is intended to aid in the selection of prioritization criteria for SSS. The application uses selected inputs to assign tiers to 87 test species that were provided by BLM. Input data include practicality for conservation of the species, as scored by BLM staff (1 = low, 5 = high) and partnering opportunities presented by the species, as scored by BLM staff (1 = low, 5 = high). Species with Inventory Priority equal to True have a habitat model that experts reviewed as poor. Species that are a monitoring priority are those with an unknown short-term trend and a rank that was reviewed in the past 10 years."))
+    
 )
 
 # Define server logic required to draw a histogram
@@ -60,7 +86,7 @@ server <- function(input, output) {
   
   new_dat <- reactive({
     # generate results based on inputs from ui.R
-    results<-prioritize(species = sss$Scientific_Name, threshold.eo = input$threshold.overlap, threshold.model = input$threshold.overlap, threshold.practical = input$threshold.practical, threshold.partner = input$threshold.partner)
+    results<-prioritize(species = sss$Scientific_Name, threshold.eo = input$threshold.eo, threshold.model = input$threshold.model, threshold.practical = input$threshold.practical, threshold.partner = input$threshold.partner)
     results
   })
     
