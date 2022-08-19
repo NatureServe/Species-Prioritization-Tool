@@ -24,7 +24,7 @@ source('Prioritization-function.R', local = T)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-    chooseSliderSkin("Big"), # 'Shiny', 'Flat', 'Modern', 'Nice', 'Simple', 'HTML5', 'Round' and 'Square'
+  chooseSliderSkin("Big"), # 'Shiny', 'Flat', 'Modern', 'Nice', 'Simple', 'HTML5', 'Round' and 'Square'
 
     fluidRow(style = "padding-left: 30px; padding-top: 20px;",
              
@@ -34,43 +34,46 @@ ui <- fluidPage(
     ),
     
     # Inputs for prioritization tool
-    fluidRow(style = "padding-left: 50px; padding-top: 10px;",
+    fluidRow(style = "padding-left: 50px; padding-top: 10px; background-color: lightgrey;",
              
              fluidRow(
                h3("Input thresholds for species prioritization"),
-               column(width = 4,
-                      fluidRow(h4("Practical Conservation Value >")),
-                      fluidRow(selectInput(inputId = "threshold.practical", choices = c(1:5), selected = 3, label = "", width = "25%"))),
-               column(width = 4,
+               h4("Stewardship Responsibility"),
+               column(width = 6,
+                      sliderInput("threshold.eo",
+                                  "Percent of species' EOs on BLM-Administered Lands >",
+                                  min = 1,
+                                  max = 100,
+                                  value = 30)),
+               column(width = 6,
                       fluidRow(h4("Partnering Opportunities >")),
                       fluidRow(selectInput(inputId = "threshold.partner", choices = c(1:5), selected = 3, label = "", width = "25%")))
              ),
              
              fluidRow(style = "padding-top: 15px;",
-                      column(width = 5,
-                             sliderInput("threshold.eo",
-                                         "Stewardship responsibility: Percent of species' EOs on BLM-Administered Lands >",
-                                         min = 1,
-                                         max = 100,
-                                         value = 30)),
-                      column(width = 5,
+                      column(width = 6,
                              sliderInput("threshold.model",
-                                         "Stewardship responsibility: Percent of modeled species distribution on BLM-Administered Lands >",
+                                         "Percent of modeled species distribution on BLM-Administered Lands >",
                                          min = 1,
                                          max = 100,
-                                         value = 30*.7))
-                      )
+                                         value = 30*.7)),
+                      column(width = 6,
+                             fluidRow(h4("Practical Conservation Value >")),
+                             fluidRow(selectInput(inputId = "threshold.practical", choices = c(1:5), selected = 3, label = "", width = "25%")))
+                      )#,
+             #fluidRow(style = "padding-top: 15px;", 
+                      #actionButton(inputId = "reset", label = "Return to default thresholds", width = "25%"))
              ),
     
     ##View results         
-    fluidRow(style = "padding-left: 50px; padding-top: 10px;",
+    fluidRow(style = "padding-left: 50px; padding-top: 10px; border: 4px solid lightgrey;",
         fluidRow(h3("View and filter prioritization results")),
              
         column(width = 6,
                plotOutput("distPlot"),
                h4("Fig 1. Number of taxa in each Tier based on prioritization criteria.")),
         
-        column(width = 4,
+        column(width = 6,
                selectizeInput("selected_Tier", "Filter results by Tier", choices = c("Tier 1", "Tier 2", "Tier 3", "Tier 4"), selected = "Tier 1", width = "50%"),
                tableOutput("data.table"))
      ),
