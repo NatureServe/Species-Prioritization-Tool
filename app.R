@@ -15,7 +15,8 @@ library(readxl)
 library(tidyverse)
 library(shinyWidgets)
 
-sss<-read_excel(path = "Data/Prioritization_Tool_11Aug2022.xlsx", sheet = "Data")
+#sss<-read_excel(path = "Data/Prioritization_Tool_11Aug2022.xlsx", sheet = "Data")
+sss<-read_excel(path = "Data/NatureServe - Random Test Species - National Data_19 Oct 2022.xlsx", sheet= "Sheet1")
 sss$Percent_EOs_BLM<-as.numeric(sss$Percent_EOs_BLM)
 sss$Percent_Model_Area_BLM<-as.numeric(sss$Percent_Model_Area_BLM)
 
@@ -89,7 +90,7 @@ server <- function(input, output) {
   
   new_dat <- reactive({
     # generate results based on inputs from ui.R
-    results<-prioritize(species = sss$Scientific_Name, threshold.eo = input$threshold.eo, threshold.model = input$threshold.model, threshold.practical = input$threshold.practical, threshold.partner = input$threshold.partner)
+    results<-prioritize(species = sss$Scientific_Name, threshold.eo = input$threshold.eo/100, threshold.model = input$threshold.model, threshold.practical = input$threshold.practical, threshold.partner = input$threshold.partner)
     results
   })
     
@@ -118,7 +119,7 @@ server <- function(input, output) {
       fig
     })
     
-    output$data.table<-renderTable(subset(new_dat(), Tier == input$selected_Tier, select = -Species))
+    output$data.table<-renderTable(subset(new_dat(), Tier == input$selected_Tier, select = c(Informal_Group, Scientific_Name, Common_Name, Tier)))
 }
 
 # Run the application 

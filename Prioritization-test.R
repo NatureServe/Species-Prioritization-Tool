@@ -5,7 +5,9 @@
 library(readxl)
 library(tidyverse)
 
-sss<-read_excel(path = "Data/Prioritization_Tool_11Aug2022.xlsx", sheet = "Data")
+#sss<-read_excel(path = "Data/Prioritization_Tool_11Aug2022.xlsx", sheet = "Data")
+sss<-read_excel(path = "Data/NatureServe - Random Test Species - National Data_19 Oct 2022.xlsx", sheet= "Sheet1")
+
 sss$Percent_EOs_BLM<-as.numeric(sss$Percent_EOs_BLM)
 sss$Percent_Model_Area_BLM<-as.numeric(sss$Percent_Model_Area_BLM)
 
@@ -14,7 +16,57 @@ source('Prioritization-function.R', local = T)
 
 results<-prioritize(species = sss$Scientific_Name)
 
-##write to excel file
-#library(xlsx)
-#write.xlsx(results, file="prioritization-results-20221010.xlsx", sheetName="all_species", row.names=FALSE)
-#write.xlsx(subset(results, Tier=="Tier 1"), file="prioritization-results-20221010.xlsx", sheetName="Tier1", append=TRUE, row.names=FALSE)
+write.csv(results, file="output/prioritization-results-20221019.csv", row.names=FALSE)
+
+##Plot results
+
+##Plot number of species in each tier
+data.plot<-data.frame(table(results$Tier))
+
+##get the label positions
+data.plot <- data.plot %>%
+  arrange(desc(Var1)) %>%
+  mutate(lab.ypos = cumsum(Freq) - 0.5*Freq) %>%
+  data.frame()
+
+fig <- ggplot(data.plot, aes(x = 2, y = Freq, fill = Var1)) +
+  geom_bar(stat = "identity", color = "white") +
+  coord_polar(theta = "y", start = 0)+
+  geom_text(aes(y = lab.ypos, label = Freq), color = "black", size=8)+
+  #geom_text(aes(y = 1, x = 1, label = paste0(round(label*100,0), "%")), color = c("black"), size = 6) +
+  scale_fill_brewer(palette = "Greens", name="", direction = -1) +
+  theme_void() +
+  xlim(.9, 2.5) +
+  theme(text = element_text(size = 20), legend.position="right")
+fig
+
+png(filename = paste0("Output/fig.tiers.png"), width = 1200*1.5, height = 1200, res=150*1.5)
+print(fig)
+dev.off()
+
+##plot taxonomic composition of each tier
+#data.plot <- data.frame(table(results$Tier, results$Informal_Group)) %>% subset(Freq>0)
+
+###NEED TO FIRST CALCULATE PROPORTION OF GROUP AND NOT FREQUENCY
+
+##get the label positions
+#data.plot <- data.plot %>%
+ # group_by(Var1) %>%
+#  arrange(desc(Var2)) %>%
+#  mutate(lab.ypos = cumsum(Freq) - 0.5*Freq) %>%
+#  data.frame()
+
+#fig <- ggplot(data.plot, aes(x = 2, y = Freq, fill = Var2)) +
+#  geom_bar(stat = "identity", color = "white") +
+ # coord_polar(theta = "y", start = 0)+
+  #facet_wrap(.~Var1)+
+  #geom_text(aes(y = lab.ypos, label = Freq), color = "black", size=8)+
+  ##geom_text(aes(y = 1, x = 1, label = paste0(round(label*100,0), "%")), color = c("black"), size = 6) +
+  #scale_fill_brewer(palette = "Greens", name="", direction = -1) +
+  #theme_void() +
+  #xlim(.9, 2.5) +
+  #theme(text = element_text(size = 20), legend.position="right")
+#fig
+
+##Show data completeness and outcomes for each prioritization step
+completeness <- subset(results, select = c(Management.responsibility, Imperiled, Conservation.practicability, Multispecies, Partnering)) %>% gather(key = "Criteria", value = "TF") %>% group_by(Criteria, TF) %>% summarise(n.spp = n()) %>% spread(key = "TF", value = "n.spp") %>% mutate(Percent.data.completeness = round((`FALSE`+`TRUE`)/nrow(results)*100, 1)) %>% subset(select = -`<NA>`) %>% rename("TRUE (No.Spp)" = `TRUE`, "FALSE (No.Spp)" = `FALSE`)
