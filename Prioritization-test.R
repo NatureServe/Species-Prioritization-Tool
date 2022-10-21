@@ -16,7 +16,7 @@ source('Prioritization-function.R', local = T)
 
 results<-prioritize(species = sss$Scientific_Name)
 
-write.csv(results, file="output/prioritization-results-20221019.csv", row.names=FALSE)
+write.csv(results, file=paste0("output/prioritization-results-",Sys.Date(),".csv"), row.names=FALSE)
 
 ##Plot results
 
