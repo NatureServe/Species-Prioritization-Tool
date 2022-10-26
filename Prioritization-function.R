@@ -4,6 +4,13 @@
 
 prioritize <- function (species, threshold.eo, threshold.model, threshold.practical, threshold.partner) {
   
+  ## Check if all input parameters exist. If not, print an error
+  required.inputs<-c("Scientific_Name", "Percent_EOs_BLM", "Percent_Model_Area_BLM", "USESA_STATUS", "Rounded_Global_Rank", "NO_KNOWN_THREATS", "Practical_Cons_BLM_Score", "Habitat_Wetland/riparian", "Habitat_scrub/shrubland", "Habitat_grassland/steppe/prairie", "Keystone/Multispecies_Benefit_BLM_Score", "Partnering_Opps_BLM_Score", "Ave_Model_Review_Score", "S_TREND", "Rank_Review_Year")
+  missing.inputs<-required.inputs[which(!(required.inputs %in% names(sss)))]
+  if (length(missing.inputs)>0){
+    stop(paste0("the following inputs are missing from the input dataset: ", paste0(missing.inputs, collapse = ", ")))
+  }
+  
   ##set default values if they are not given
   if(!hasArg(species)) {species<-sss$Scientific_Name}
   if(!hasArg(threshold.eo)) {threshold.eo<-0.3}
