@@ -75,7 +75,7 @@ ui <- fluidPage(
                h4("Fig 1. Number of taxa in each Tier based on prioritization criteria.")),
         
         column(width = 6,
-               selectizeInput("selected_Tier", "Filter results by Tier", choices = c("Tier 1", "Tier 2", "Tier 3", "Tier 4"), selected = "Tier 1", width = "50%"),
+               selectizeInput("selected_Tier", "Filter results by Tier", choices = c("Tier 1", "Tier 2", "Tier 3", "Tier 4", "Data deficient"), selected = "Tier 1", width = "50%"),
                tableOutput("data.table"))
      ),
     
@@ -102,17 +102,17 @@ server <- function(input, output) {
       
       ##get the label positions
       data.plot <- data.plot %>%
+        mutate(Var1 = factor(Var1, levels = c("Tier 1", "Tier 2", "Tier 3", "Tier 4", "Data deficient"))) %>%
         arrange(desc(Var1)) %>%
         mutate(lab.ypos = cumsum(Freq) - 0.5*Freq) %>%
         data.frame()
-      data.plot
       
       fig <- ggplot(data.plot, aes(x = 2, y = Freq, fill = Var1)) +
         geom_bar(stat = "identity", color = "white") +
         coord_polar(theta = "y", start = 0)+
         geom_text(aes(y = lab.ypos, label = Freq), color = "black", size=8)+
-        #geom_text(aes(y = 1, x = 1, label = paste0(round(label*100,0), "%")), color = c("black"), size = 6) +
-        scale_fill_brewer(palette = "Greens", name="", direction = -1) +
+        #scale_fill_brewer(palette = "Greens", name="", direction = -1) +
+        scale_fill_manual(values = c(rev(brewer.pal(4, "Greens")), "grey"), name="") +
         theme_void() +
         xlim(.9, 2.5) +
         theme(text = element_text(size = 20), legend.position="right")

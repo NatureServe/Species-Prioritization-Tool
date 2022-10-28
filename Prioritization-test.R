@@ -19,12 +19,15 @@ results<-prioritize(data = sss)
 write.csv(results, file=paste0("output/prioritization-results-",Sys.Date(),".csv"), row.names=FALSE)
 
 ##Plot results
+library(RColorBrewer)
 
 ##Plot number of species in each tier
 data.plot<-data.frame(table(results$Tier))
 
 ##get the label positions
 data.plot <- data.plot %>%
+  #arrange(desc(Var1)) %>%
+  mutate(Var1 = factor(Var1, levels = c("Tier 1", "Tier 2", "Tier 3", "Tier 4", "Data deficient"))) %>%
   arrange(desc(Var1)) %>%
   mutate(lab.ypos = cumsum(Freq) - 0.5*Freq) %>%
   data.frame()
@@ -33,8 +36,8 @@ fig <- ggplot(data.plot, aes(x = 2, y = Freq, fill = Var1)) +
   geom_bar(stat = "identity", color = "white") +
   coord_polar(theta = "y", start = 0)+
   geom_text(aes(y = lab.ypos, label = Freq), color = "black", size=8)+
-  #geom_text(aes(y = 1, x = 1, label = paste0(round(label*100,0), "%")), color = c("black"), size = 6) +
-  scale_fill_brewer(palette = "Greens", name="", direction = -1) +
+  scale_fill_manual(values = c(rev(brewer.pal(4, "Greens")), "grey"), name="") +
+  #scale_fill_brewer(palette = "Greens", name="", direction = -1) +
   theme_void() +
   xlim(.9, 2.5) +
   theme(text = element_text(size = 20), legend.position="right")
