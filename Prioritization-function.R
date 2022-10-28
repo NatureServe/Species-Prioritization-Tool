@@ -2,24 +2,24 @@
 ##Max Tarjan
 ##Aug 12, 2022
 
-prioritize <- function (species, threshold.eo, threshold.model, threshold.practical, threshold.partner) {
+prioritize <- function (data, species, threshold.eo, threshold.model, threshold.practical, threshold.partner) {
   
   ## Check if all input parameters exist. If not, print an error
   required.inputs<-c("Scientific_Name", "Percent_EOs_BLM", "Percent_Model_Area_BLM", "USESA_STATUS", "Rounded_Global_Rank", "NO_KNOWN_THREATS", "Practical_Cons_BLM_Score", "Habitat_Wetland/riparian", "Habitat_scrub/shrubland", "Habitat_grassland/steppe/prairie", "Keystone/Multispecies_Benefit_BLM_Score", "Partnering_Opps_BLM_Score", "Ave_Model_Review_Score", "S_TREND", "Rank_Review_Year")
-  missing.inputs<-required.inputs[which(!(required.inputs %in% names(sss)))]
+  missing.inputs<-required.inputs[which(!(required.inputs %in% names(data)))]
   if (length(missing.inputs)>0){
     stop(paste0("the following inputs are missing from the input dataset: ", paste0(missing.inputs, collapse = ", ")))
   }
   
   ##set default values if they are not given
-  if(!hasArg(species)) {species<-sss$Scientific_Name}
-  if(!hasArg(threshold.eo)) {threshold.eo<-0.3}
+  if(!hasArg(species)) {species<-data$Scientific_Name}
+  if(!hasArg(threshold.eo)) {threshold.eo<-30}
   if(!hasArg(threshold.model)) {threshold.model<-30}
   if(!hasArg(threshold.practical)) {threshold.practical<-3}
   if(!hasArg(threshold.partner)) {threshold.partner<-3}
   
   ##subset backend input data to select species
-  results <- subset(sss, Scientific_Name %in% species)
+  results <- subset(data, Scientific_Name %in% species)
   results$Tier <- NA
   
   ##DID EACH SPECIES PASS OR FAIL EACH CRITERION?
@@ -63,12 +63,12 @@ prioritize <- function (species, threshold.eo, threshold.model, threshold.practi
   ##Tier 4
   results$Tier[which(is.na(results$Tier))] <- "Tier 4"
   
-  ##Data deficient as a tier (unknown management responsibility)
+  ## Data deficient as a tier (unknown management responsibility)
   results$Tier[which(is.na(results$Management.responsibility))] <- "Data deficient"
   
-  ##Data deficient = data deficiency influences the tier
-  ##flagged if the lack of data brings the species into another Tier
-  ##eg ##tier 2 and NA multispecies or partnering
+  ## Data deficient = data deficiency influences the tier
+  ## Flagged if the lack of data brings the species into another Tier
+  ## eg ##tier 2 and NA multispecies or partnering
   results$Data.deficient <- ifelse(
     ##sp is in data deficient tier due to NA in management responsibility
     is.na(results$Management.responsibility) |
@@ -76,7 +76,7 @@ prioritize <- function (species, threshold.eo, threshold.model, threshold.practi
       (results$Tier =="Tier 2" & (is.na(results$Partnering) | is.na(results$Multispecies))) |
       ##species is in tier 3 due to NA in cons
       (results$Tier =="Tier 3" & is.na(results$Conservation.practicability)) |
-      ##is this condition necessary?
+      ## In tier 4 due to NA in imperilment
       (!is.na(results$Management.responsibility) & is.na(results$Imperiled)), 
     T, F)
   

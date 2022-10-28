@@ -90,7 +90,7 @@ server <- function(input, output) {
   
   new_dat <- reactive({
     # generate results based on inputs from ui.R
-    results<-prioritize(species = sss$Scientific_Name, threshold.eo = input$threshold.eo/100, threshold.model = input$threshold.model, threshold.practical = input$threshold.practical, threshold.partner = input$threshold.partner)
+    results<-prioritize(data=sss, species = sss$Scientific_Name, threshold.eo = input$threshold.eo/100, threshold.model = input$threshold.model, threshold.practical = input$threshold.practical, threshold.partner = input$threshold.partner)
     results
   })
     

@@ -14,7 +14,7 @@ sss$Percent_Model_Area_BLM<-as.numeric(sss$Percent_Model_Area_BLM)
 ##source code for prioritization function
 source('Prioritization-function.R', local = T)
 
-results<-prioritize(species = sss$Scientific_Name)
+results<-prioritize(data = sss)
 
 write.csv(results, file=paste0("output/prioritization-results-",Sys.Date(),".csv"), row.names=FALSE)
 
