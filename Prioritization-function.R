@@ -33,7 +33,7 @@ prioritize <- function (data, species, threshold.eo, threshold.model, threshold.
                                                                       !Management.responsibility.model ~ F))
   
   ##Imperilment: Species is ESA listed, proposed, candidate' Species ranked G1, G2, T1, T2
-  results$Imperiled<-ifelse((!is.na(results$USESA_STATUS) & results$USESA_STATUS!="DL") | (results$Rounded_Global_Rank %in% c("G1", "G2", "T1", "T2") & results$NO_KNOWN_THREATS == 0), T, F)
+  results$Imperiled<-ifelse((!is.na(results$USESA_STATUS) & results$USESA_STATUS!="DL" & results$USESA_STATUS != 0) | (results$Rounded_Global_Rank %in% c("G1", "G2", "T1", "T2") & results$NO_KNOWN_THREATS == 0), T, F)
   
   ##Conservation Practicability: BLM Assessment derived from USFWS recovery priority numbers
   results$Conservation.practicability <- ifelse(results$Practical_Cons_BLM_Score > threshold.practical, T, F)
