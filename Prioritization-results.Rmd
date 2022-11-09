@@ -1,0 +1,31 @@
+---
+title: "BLM SSS Prioritization Tool Results"
+author: "Max Tarjan"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  powerpoint_presentation:
+  #word_document:
+      fig_caption: yes
+      reference_doc: "Presentation Template.pptx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, warning=FALSE, include=FALSE}
+source('Prioritization-test.R', local = T)
+
+figure.num<-0
+table.num<-0
+```
+
+```{r, echo=FALSE, fig.cap= paste("Figure ", figure.num, ". Number of taxa in each tier.")}
+knitr::include_graphics(path="Output/fig.tiers.png")
+figure.num<-figure.num+1
+```
+
+```{r, echo=FALSE}
+knitr::kable(completeness)
+#figure.num<-figure.num+1
+```
