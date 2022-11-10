@@ -14,6 +14,7 @@ library(ggplot2)
 library(readxl)
 library(tidyverse)
 library(shinyWidgets)
+library(DT) ##for displaying and editing tables
 
 #sss<-read_excel(path = "Data/Prioritization_Tool_11Aug2022.xlsx", sheet = "Data")
 sss<-read_excel(path = "Data/NatureServe - Random Test Species - National Data_19 Oct 2022.xlsx", sheet= "Sheet1")
