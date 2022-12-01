@@ -11,17 +11,20 @@ library(shinyBS)
 #'
 #' ##### Google oauth authentication
 #' designate project-specific cache
-options(gargle_oauth_cache = ".secrets")
+#options(gargle_oauth_cache = ".secrets")
 #' check the value of the option, if you like
-gargle::gargle_oauth_cache()
+#gargle::gargle_oauth_cache()
 #' trigger auth on purpose --> store a token in the specified cache
-drive_auth()
+#drive_auth()
 #' see your token file in the cache, if you like
-list.files(".secrets/")
-options(
-  gargle_oauth_cache = ".secrets",
-  gargle_oauth_email = TRUE
-)
+#list.files(".secrets/")
+#options(
+#  gargle_oauth_cache = ".secrets",
+#  gargle_oauth_email = TRUE
+#)
+
+drive_auth(path = "BLM-Scores/skilful-berm-368100-59d29742d3f1.json")
+gs4_auth(path = "BLM-Scores/skilful-berm-368100-59d29742d3f1.json")
 
 ### Data
 
