@@ -116,5 +116,5 @@ odbcClose(con)
 sss.data <- dat %>% 
   select(ELEMENT_GLOBAL_ID, NAME_CATEGORY, INFORMAL_TAX, GNAME, G_PRIMARY_COMMON_NAME, GRANK, RND, USESA) %>%
   #left_join(y = ) %>%
-  rename(ELEMENT_GLOBAL_ID = `NatureServe Element ID`, NAME_CATEGORY = `Major Group`, INFORMAL_TAX = `Lower Level Informal Group`, GNAME = `NatureServe Scientific Name`, G_PRIMARY_COMMON_NAME = `NatureServe Common Name`, GRANK = `Global Rank`, RND = `Rounded Global Rank`, USESA = `ESA Status`)
+  rename(ELEMENT_GLOBAL_ID = `NatureServe Element ID`, NAME_CATEGORY = `Major Group`, INFORMAL_TAX = `Lower Level Informal Group`, GNAME = `NatureServe Scientific Name`, G_PRIMARY_COMMON_NAME = `NatureServe Common Name`, GRANK = `Global Rank`, RND = `Rounded Global Rank`, USESA = `ESA Status`) ##naming for spreadsheet that gets passed to BLM to submit scores
   
