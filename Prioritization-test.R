@@ -4,19 +4,25 @@
 
 library(readxl)
 library(tidyverse)
+library(googlesheets4)
 
 #sss<-read_excel(path = "Data/Prioritization_Tool_11Aug2022.xlsx", sheet = "Data")
-sss<-read_excel(path = "Data/NatureServe - Random Test Species - National Data_19 Oct 2022.xlsx", sheet= "Sheet1")
+#sss<-read_excel(path = "Data/NatureServe - Random Test Species - National Data_19 Oct 2022.xlsx", sheet= "Sheet1")
+sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2022-12-06")
+sss$USFWS_Recovery_Priority_Num<-as.character(sss$USFWS_Recovery_Priority_Num)
+sss$USFWS_Recovery_Priority_Num[which(sss$USFWS_Recovery_Priority_Num == "NULL")] <- NA
 
-sss$Percent_EOs_BLM<-as.numeric(sss$Percent_EOs_BLM)
-sss$Percent_Model_Area_BLM<-as.numeric(sss$Percent_Model_Area_BLM)
+#sss$Percent_EOs_BLM<-as.numeric(sss$Percent_EOs_BLM)
+#sss$Percent_Model_Area_BLM<-as.numeric(sss$Percent_Model_Area_BLM)
 
 ##source code for prioritization function
-source('Prioritization-function.R', local = T)
+source('shiny/SSS-Prioritization-Tool/Prioritization-function.R', local = T)
 
 results<-prioritize(data = sss)
 
-write.csv(results, file=paste0("output/prioritization-results-",Sys.Date(),".csv"), row.names=FALSE)
+sheet_write(data = results, ss = "https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet = paste0("ESA_spp_", Sys.Date()))
+
+write.csv(results, file=paste0("C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Species Prioritization Tool/ESA Species/prioritization-results-",Sys.Date(),".csv"), row.names=FALSE)
 
 ##Plot results
 library(RColorBrewer)

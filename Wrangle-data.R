@@ -6,33 +6,44 @@
 library(readxl)
 library(tidyverse)
 library(RODBC)
+library(googlesheets4)
+library(googledrive)
 
 ## Check which species have EOs in the spatial snapshot for jurisdictional analysis
 ## Load sss from esa batch
 sss.esa <- read_excel("C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Species Prioritization Tool/ESA Species/ESA listed BLM SSS to score for Prioritization Tool_7Nov2022.xlsx")
 
 ## Get available EOs
-eos <-  read_excel("C:/Users/max_tarjan/OneDrive - NatureServe/Documents/Species-Select/Data/Biotics_EO_Summary.xlsx", sheet = "EO_Summary_202207")
-eos <- eos %>% select(c(ELEMENT_GLOBAL_ID, SUBNATION_CODE, NUM_CURRENT_EOS)) %>% group_by(ELEMENT_GLOBAL_ID) %>% summarise(NUM_CURRENT_EOS = sum(NUM_CURRENT_EOS))
+#eos <-  read_excel("C:/Users/max_tarjan/OneDrive - NatureServe/Documents/Species-Select/Data/Biotics_EO_Summary.xlsx", sheet = "EO_Summary_202207")
+#eos <- eos %>% select(c(ELEMENT_GLOBAL_ID, SUBNATION_CODE, NUM_CURRENT_EOS)) %>% group_by(ELEMENT_GLOBAL_ID) %>% summarise(NUM_CURRENT_EOS = sum(NUM_CURRENT_EOS))
 
-sss.esa <- left_join(sss.esa, eos, by = c(`NatureServe Element ID` = "ELEMENT_GLOBAL_ID"))
+#sss.esa <- left_join(sss.esa, eos, by = c(`NatureServe Element ID` = "ELEMENT_GLOBAL_ID"))
 
 #write.csv(sss.esa, "C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Species Prioritization Tool/ESA Species/EOs for ESA listed BLM SSS.csv", row.names= F)
+
+## CREATE BACKEND DATASHEETS FOR SHINY APPLICATIONS
+
+## define species ids for selection
+ids <- sss.esa$`NatureServe Element ID`
 
 ## Connect to central biotics to pull out most recent data on sss
 con<-odbcConnect("centralbiotics", uid="biotics_report", pwd=rstudioapi::askForPassword("Password"))
 
-qry <- "SELECT 
+qry <- paste0("SELECT
  egt.element_global_id
- ,GETNAMECATDESC(egt.gname_id) Name_Category
+ , 'ELEMENT_GLOBAL.'||egt.element_global_ou_uid||'.'||egt.element_global_seq_uid eguid
+ , GETNAMECATDESC(egt.gname_id) Name_Category
  , informal_grp((informal_tax(egt.element_global_id))) informal_grp
  , informal_tax(egt.element_global_id) Informal_Tax
  , sn.SCIENTIFIC_NAME gname
  , egt.g_primary_common_name
  , egt.G_RANK grank
  , egt.ROUNDED_G_RANK rnd
+ , egt.g_rank_review_date
  , d_usesa.display_value usesa
  , d_short_term_trend.display_value S_Trend
+ /*, d_range_extent.range_extent_cd
+ , d_range_extent.range_extent_desc*/
 
 ,(case when sn.d_name_category_id in (1, 2, 3)  /******ANIMAL*******/ then 
 (DelimList('SELECT terrestrial_habitat_desc FROM d_terrestrial_habitat dth, animal_cag_terr_hab acth WHERE 
@@ -76,6 +87,12 @@ else '' end)    riverine_habitats
     || egt.element_global_id || ') ORDER BY s.nation_id desc, SUBNATL_DIST ', ', ') 
   AS BLM_SSS_states
 
+, DelimList('SELECT iucn_threat_category_desc FROM el_global_threats_assess, d_iucn_threat_category WHERE 
+        el_global_threats_assess.d_iucn_threat_category_id = d_iucn_threat_category.d_iucn_threat_category_id and el_global_threats_assess.element_global_id = '||egt.element_global_id, '; ') AS THREATS_DESC
+
+, DelimList('SELECT iucn_threat_category_cd FROM el_global_threats_assess, d_iucn_threat_category WHERE 
+        el_global_threats_assess.d_iucn_threat_category_id = d_iucn_threat_category.d_iucn_threat_category_id and el_global_threats_assess.element_global_id = '||egt.element_global_id, '; ') AS THREATS
+
 FROM 
 ELEMENT_GLOBAL egt 
  , taxon_global tg
@@ -88,6 +105,7 @@ ELEMENT_GLOBAL egt
  , el_natl_agency_status nas
  , d_usesa
  , d_short_term_trend
+ /*, d_range_extent*/
  
 WHERE 
  egt.element_global_id = tg.element_global_id
@@ -100,21 +118,53 @@ and egt.element_global_id = ent.element_global_id
 and ent.element_national_id = nas.element_national_id
  and tg.d_usesa_id = d_usesa.d_usesa_id (+)
  and egr.d_short_term_trend_id = d_short_term_trend.d_short_term_trend_id (+)
-and nas.agency_name like 'BLM West 2019-11%'
+/*and egr.d_range_extent_id = d_range_extent.d_range_extent_id*/
+/*and nas.agency_name like 'BLM West 2019-11%'
 and ent.nation_id = 225 
-and egt.inactive_ind = 'N'
+and egt.inactive_ind = 'N'*/
+and egt.element_global_id IN (", paste0(ids, collapse = ", "),")
 
 ORDER BY 
 sn.d_name_category_id,name_category, informal_grp, informal_tax, scientific_name
-;"
+;")
+
+##SELECT iucn_threat_category_desc FROM el_global_threats_assess, d_iucn_threat_category WHERE egt.element_global_id = el_global_threats_assess.element_global_id and el_global_threats_assess.d_iucn_threat_category_id = d_iucn_threat_category.d_iucn_threat_category_id') AS THREATS
 
 dat<-sqlQuery(con, qry); head(dat) ##import the queried table
 
-# When finished, it's a good idea to close the connection
+# When finished, close the connection
 odbcClose(con)
 
-sss.data <- dat %>% 
-  select(ELEMENT_GLOBAL_ID, NAME_CATEGORY, INFORMAL_TAX, GNAME, G_PRIMARY_COMMON_NAME, GRANK, RND, USESA) %>%
-  #left_join(y = ) %>%
-  rename(ELEMENT_GLOBAL_ID = `NatureServe Element ID`, NAME_CATEGORY = `Major Group`, INFORMAL_TAX = `Lower Level Informal Group`, GNAME = `NatureServe Scientific Name`, G_PRIMARY_COMMON_NAME = `NatureServe Common Name`, GRANK = `Global Rank`, RND = `Rounded Global Rank`, USESA = `ESA Status`) ##naming for spreadsheet that gets passed to BLM to submit scores
-  
+sss.data <- unique(dat) %>% 
+  mutate(Explorer.url = paste0("https://explorer.natureserve.org/Taxon/", EGUID, "/", sub(x=GNAME, pattern = " ", replacement = "_")),
+         ExplorerPro.url = paste0("https://explorer.natureserve.org/pro/Map/?taxonUniqueId=", EGUID),
+         `Habitat_Wetland/riparian` =  ifelse(!is.na(PALUSTRINE_HABITATS), T, F),
+         `Habitat_scrub/shrubland` = ifelse(grepl(TERRESTRIAL_HABITATS, pattern = "(?i)scrub|shrub"), T, F),
+         `Habitat_grassland/steppe/prairie` = ifelse(grepl(TERRESTRIAL_HABITATS, pattern = "(?i)grassland|steppe|prairie"), T, F),
+         #NS_Endemic = ifelse(grepl(RANGE_EXTENT_CD, pattern = "A|B|C|D|E") & !grepl(RANGE_EXTENT_CD, pattern = "G|H"), T, F),
+         BLM_Threats = ifelse(grepl(strsplit(THREATS, split = "; "), pattern = "1.2|1.3|2.3.1|2.3.2|2.3.4|3.1|3.2|3.3|6.1"), T, F),
+         NO_KNOWN_THREATS = ifelse(is.na(THREATS), T, F),
+         Rank_Review_Year = format(G_RANK_REVIEW_DATE, "%Y")) %>%
+  # select(ELEMENT_GLOBAL_ID, NAME_CATEGORY, INFORMAL_TAX, GNAME, G_PRIMARY_COMMON_NAME, RND, USESA, BLM_SSS_STATES, RANGE_EXTENT_DESC, RANGE_EXTENT_CD, Explorer.url, ExplorerPro.url) %>%
+ rename(NatureServe_Element_ID = ELEMENT_GLOBAL_ID, Major_Group= NAME_CATEGORY, Lower_Level_Informal_Group = INFORMAL_TAX, Scientific_Name = GNAME, NatureServe_Common_Name = G_PRIMARY_COMMON_NAME, Rounded_Global_Rank = RND, ESA_Status = USESA, BLM_SSS_States = BLM_SSS_STATES) ##naming for spreadsheet that gets passed to BLM to submit scores
+
+## Add data from BLM
+BLM.scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_20221205") %>%
+  rename_with(~gsub(.x, pattern = " ", replacement = "_"))
+
+sss.data <- sss.data %>% 
+  left_join(y = subset(BLM.scores, select = c("NatureServe_Element_ID", "USFWS_Recovery_Priority_Num", "BLM_Practicability_Score", "BLM_Mutispecies_Score", "BLM_Partnering_Score", "Endemic", "HQ_Notes")))
+
+## Add results from jurisdictional analysis
+ja <- read_excel("C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Provided to BLM/BLM - Information for T & E Strategic Decision-Making - October 2022.xlsx", sheet = "BLM SSS Information by State", skip = 1) %>% 
+  mutate(Percent_EOs_BLM = as.numeric(`Occurrences on BLM Lands (West) / Total Occurrences Rangewide`),
+         Percent_Model_Area_BLM = `Percent Suitable Habitat on BLM Lands (West)`) %>%
+  rename("NatureServe_Element_ID" = "Element Global ID")
+
+sss.data <- sss.data %>% left_join(y=subset(ja, select = c("NatureServe_Element_ID", "Percent_EOs_BLM", "Percent_Model_Area_BLM")))
+
+##Subset data to the group that should appear in the applications (ESA listed)
+#sss.listed <- sss.data %>% filter(!is.na(`ESA Status`) & `ESA Status` != "DL: Delisted")
+
+##Write data to googlesheet
+sheet_write(data = sss.data, ss = "https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet = paste0("ESA_spp_", Sys.Date()))
