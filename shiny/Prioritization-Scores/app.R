@@ -111,10 +111,10 @@ shinyApp(
                      fluidRow(p("1. Use the dropdown menu 'BLM affiliation' above to filter the table to taxa in your state."), style = "padding-left: 15px;"),
                      fluidRow(p("2. Use the dropdown menu 'Filter by taxon' below to filter the table."), style = "padding-left: 15px;"),
                      # fluidRow(p("2. Use the dropdown menus 'Set all ... scores to' to update values across all selected species for the corresponding field"), style = "padding-left: 15px;"),               
-                     fluidRow(p("3. Review BLM scores and resulting Tier assignments for relevant species. Double-click on any individual cell for the three types of BLM scores to edit its value - make sure you double-click outside the cell to save your entry before moving on to a different one."), style = "padding-left: 15px;"),
-                     fluidRow(p("4. Select species for which you have reviewed the BLM scores by clicking on the row. Use SHIFT to select multiple species."), style = "padding-left: 15px;"),
-                     fluidRow(p("5. Navigate to more filtered results using the menu at the bottom right of the table"), style = "padding-left: 15px;"),
-                     fluidRow(p("6. After you have reviewed and edited scores, be sure to click on every row for which you have reviewed the scores, then click Submit! You can select all species in the filter using the 'Mark BLM scores for all species in the filter as reviewed' toggle."), style = "padding-left: 15px;")
+                     fluidRow(p("3. Review BLM scores and resulting Tier assignments for relevant species. Double-click on any highlighted cell to edit its value - make sure you double-click outside the cell to save your entry before moving on to a different one"), style = "padding-left: 15px;"),
+                     fluidRow(p("4. Select species for which you have reviewed the BLM scores by clicking on the row"), style = "padding-left: 15px;"),
+                     fluidRow(p("5. Navigate to more pages of results using the menu at the bottom right of the table"), style = "padding-left: 15px;"),
+                     fluidRow(p("6. After you have reviewed and edited scores, be sure to click on every row for which you have reviewed the scores, then click Submit!"), style = "padding-left: 15px;")
                    ),
                    
                    fluidRow(
@@ -164,9 +164,9 @@ shinyApp(
                    #   
                    # ),
                    
-                   fluidRow(
-                     column(3, style = "padding-left: 30; margin-top: 30px;", prettySwitch(inputId = "reviewed_all", label = "Mark BLM scores for all species in the filter as reviewed", status = "primary"))
-                   ),
+                   # fluidRow(
+                   #   column(3, style = "padding-left: 30; margin-top: 30px;", prettySwitch(inputId = "reviewed_all", label = "Mark BLM scores for all species in the filter as reviewed", status = "primary"))
+                   # ),
                    
                    fluidRow(
                      h3("Submit your scores"),
@@ -224,7 +224,7 @@ shinyApp(
       
       print(state_scores$values)
       
-      datatable(subset(state_scores$values, select = display.columns), options = list(dom = 'tp', pageLength = 20), editable = list(target = "cell", disable = list(columns = c(1:7, 11, 12)), numeric = c(8:10), area = 13), selection = list(mode = "multiple", target = "row")) %>%
+      datatable(subset(state_scores$values, select = display.columns), options = list(dom = 'tp', pageLength = 10), editable = list(target = "cell", disable = list(columns = c(1:7, 11, 12)), numeric = c(8:10), area = 13), selection = list(mode = "multiple", target = "row")) %>%
         formatStyle(columns = c(8:10, 13), backgroundColor = "lightyellow", fontWeight = 'bold')
       
     })
@@ -286,7 +286,7 @@ shinyApp(
       #     dplyr::filter(`Lower Level Informal Group` == input$selected_taxon3)
       # }
       
-      datatable(subset(latest_scores_edits$values, select = display.columns), options = list(dom = 'tp', pageLength = 20), editable = list(target = "cell", disable = list(columns = c(1:7, 11:12)), numeric = c(8:10), area = 13), selection = list(mode = "multiple", target = "row")) %>%
+      datatable(subset(latest_scores_edits$values, select = display.columns), options = list(dom = 'tp', pageLength = 10), editable = list(target = "cell", disable = list(columns = c(1:7, 11:12)), numeric = c(8:10), area = 13), selection = list(mode = "multiple", target = "row")) %>%
         formatStyle(columns = c(8:10, 13), backgroundColor = "lightyellow", fontWeight = 'bold')
       
     })

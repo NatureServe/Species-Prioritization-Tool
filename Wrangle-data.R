@@ -142,8 +142,9 @@ sss.data <- dat %>%
          `Habitat_Wetland/riparian` =  ifelse(!is.na(PALUSTRINE_HABITATS), T, F),
          `Habitat_scrub/shrubland` = ifelse(grepl(TERRESTRIAL_HABITATS, pattern = "(?i)scrub|shrub"), T, F),
          `Habitat_grassland/steppe/prairie` = ifelse(grepl(TERRESTRIAL_HABITATS, pattern = "(?i)grassland|steppe|prairie"), T, F),
-         #NS_Endemic = ifelse(grepl(RANGE_EXTENT_CD, pattern = "A|B|C|D|E") & !grepl(RANGE_EXTENT_CD, pattern = "G|H"), T, F),
-         BLM_Threats = ifelse(grepl(strsplit(THREATS, split = "; "), pattern = "1.2|1.3|2.3|2.3.1|2.3.2|2.3.4|3.1|3.2|3.3|6.1|3"), T, F),
+         # NS_Endemic = ifelse(grepl(RANGE_EXTENT_CD, pattern = "A|B|C|D|E") & !grepl(RANGE_EXTENT_CD, pattern = "G|H"), T, F),
+         # BLM_Threats = strsplit(THREATS, split = "; ") %>% unlist(recursive=F) %in% c("1.2","1.3","2.3","2.3.1","2.3.2","2.3.4","3.1","3.2","3.3","6.1","3") %>% any(), ##not working properly
+         BLM_Threats = ifelse(grepl(strsplit(THREATS, split = "; "), pattern = "(?<!\\d|\\.)1.2|(?<!\\d|\\.)1.3|(?<!\\d|\\.)2.3|(?<!\\d|\\.)2.3.1|(?<!\\d|\\.)2.3.2|(?<!\\d|\\.)2.3.4|(?<!\\d|\\.)3.1|(?<!\\d|\\.)3.2|(?<!\\d|\\.)3.3|(?<!\\d|\\.)6.1|(?<!\\d|\\.)3", perl=T), T, F),
          NO_KNOWN_THREATS = ifelse(is.na(THREATS), T, F),
          Rank_Review_Year = format(G_RANK_REVIEW_DATE, "%Y")) %>%
   # select(ELEMENT_GLOBAL_ID, NAME_CATEGORY, INFORMAL_TAX, GNAME, G_PRIMARY_COMMON_NAME, RND, USESA, BLM_SSS_STATES, RANGE_EXTENT_DESC, RANGE_EXTENT_CD, Explorer.url, ExplorerPro.url) %>%
