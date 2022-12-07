@@ -135,18 +135,19 @@ dat<-sqlQuery(con, qry); head(dat) ##import the queried table
 # When finished, close the connection
 odbcClose(con)
 
-sss.data <- unique(dat) %>% 
+sss.data <- dat %>% 
+  filter(!duplicated(ELEMENT_GLOBAL_ID)) %>%
   mutate(Explorer.url = paste0("https://explorer.natureserve.org/Taxon/", EGUID, "/", sub(x=GNAME, pattern = " ", replacement = "_")),
          ExplorerPro.url = paste0("https://explorer.natureserve.org/pro/Map/?taxonUniqueId=", EGUID),
          `Habitat_Wetland/riparian` =  ifelse(!is.na(PALUSTRINE_HABITATS), T, F),
          `Habitat_scrub/shrubland` = ifelse(grepl(TERRESTRIAL_HABITATS, pattern = "(?i)scrub|shrub"), T, F),
          `Habitat_grassland/steppe/prairie` = ifelse(grepl(TERRESTRIAL_HABITATS, pattern = "(?i)grassland|steppe|prairie"), T, F),
          #NS_Endemic = ifelse(grepl(RANGE_EXTENT_CD, pattern = "A|B|C|D|E") & !grepl(RANGE_EXTENT_CD, pattern = "G|H"), T, F),
-         BLM_Threats = ifelse(grepl(strsplit(THREATS, split = "; "), pattern = "1.2|1.3|2.3.1|2.3.2|2.3.4|3.1|3.2|3.3|6.1"), T, F),
+         BLM_Threats = ifelse(grepl(strsplit(THREATS, split = "; "), pattern = "1.2|1.3|2.3|2.3.1|2.3.2|2.3.4|3.1|3.2|3.3|6.1|3"), T, F),
          NO_KNOWN_THREATS = ifelse(is.na(THREATS), T, F),
          Rank_Review_Year = format(G_RANK_REVIEW_DATE, "%Y")) %>%
   # select(ELEMENT_GLOBAL_ID, NAME_CATEGORY, INFORMAL_TAX, GNAME, G_PRIMARY_COMMON_NAME, RND, USESA, BLM_SSS_STATES, RANGE_EXTENT_DESC, RANGE_EXTENT_CD, Explorer.url, ExplorerPro.url) %>%
- rename(NatureServe_Element_ID = ELEMENT_GLOBAL_ID, Major_Group= NAME_CATEGORY, Lower_Level_Informal_Group = INFORMAL_TAX, Scientific_Name = GNAME, NatureServe_Common_Name = G_PRIMARY_COMMON_NAME, Rounded_Global_Rank = RND, ESA_Status = USESA, BLM_SSS_States = BLM_SSS_STATES) ##naming for spreadsheet that gets passed to BLM to submit scores
+ rename(NatureServe_Element_ID = ELEMENT_GLOBAL_ID, Major_Group= NAME_CATEGORY, Higher_Level_Informal_Group = INFORMAL_GRP, Lower_Level_Informal_Group = INFORMAL_TAX, Scientific_Name = GNAME, NatureServe_Common_Name = G_PRIMARY_COMMON_NAME, Rounded_Global_Rank = RND, ESA_Status = USESA, BLM_SSS_States = BLM_SSS_STATES)
 
 ## Add data from BLM
 BLM.scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_20221205") %>%
