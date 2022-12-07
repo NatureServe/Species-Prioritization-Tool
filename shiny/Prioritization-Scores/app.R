@@ -37,8 +37,8 @@ gs4_auth(path = "BLM-Scores/skilful-berm-368100-59d29742d3f1.json")
 #' ## In this case, only one is needed
 user_base <- dplyr::tibble(
   user = c("blm_user"),
-  #password = c("T@xon0m1c"),
-  password = c("123"),
+  password = c("T@xon0m1c"),
+  # password = c("123"), #simple pw for testing
   permissions = c("admin"),
   name = c("BLM User")
 )
