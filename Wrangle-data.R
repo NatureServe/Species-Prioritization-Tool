@@ -77,6 +77,12 @@ when sn.d_name_category_id in (4, 5, 6, 7, 19)  /******PLANT*******/  then
         pcrh.d_riverine_habitat_id = drh.d_riverine_habitat_id and pcrh.element_global_id = '||egt.element_global_id, '; '))  
 else '' end)    riverine_habitats 
 
+/* selects threat category if it is No Known Threats */
+  ,(SELECT d_iucn_threat_category.display_value FROM d_iucn_threat_category, el_global_threats_assess 
+       WHERE el_global_threats_assess.D_IUCN_THREAT_CATEGORY_ID = d_iucn_threat_category.D_IUCN_THREAT_CATEGORY_ID 
+       and el_global_threats_assess.d_iucn_threat_category_id = 89 /*No Known threats */
+       and el_global_threats_assess.element_global_id =  egt.element_global_id )   as NO_KNOWN_THREATS
+
 , DelimList('SELECT DECODE(s.nation_id,139,''MX'','''')
     || s.subnation_code ||   ''''  AS subnatl_dist '
     || ' FROM element_subnational, subnation s, taxon_subnatl_sprot_ext ts_ext
@@ -145,7 +151,6 @@ sss.data <- dat %>%
          # NS_Endemic = ifelse(grepl(RANGE_EXTENT_CD, pattern = "A|B|C|D|E") & !grepl(RANGE_EXTENT_CD, pattern = "G|H"), T, F),
          # BLM_Threats = strsplit(THREATS, split = "; ") %>% unlist(recursive=F) %in% c("1.2","1.3","2.3","2.3.1","2.3.2","2.3.4","3.1","3.2","3.3","6.1","3") %>% any(), ##not working properly
          BLM_Threats = ifelse(grepl(strsplit(THREATS, split = "; "), pattern = "(?<!\\d|\\.)1.2|(?<!\\d|\\.)1.3|(?<!\\d|\\.)2.3|(?<!\\d|\\.)2.3.1|(?<!\\d|\\.)2.3.2|(?<!\\d|\\.)2.3.4|(?<!\\d|\\.)3.1|(?<!\\d|\\.)3.2|(?<!\\d|\\.)3.3|(?<!\\d|\\.)6.1|(?<!\\d|\\.)3", perl=T), T, F),
-         NO_KNOWN_THREATS = ifelse(is.na(THREATS), T, F),
          Rank_Review_Year = format(G_RANK_REVIEW_DATE, "%Y")) %>%
   # select(ELEMENT_GLOBAL_ID, NAME_CATEGORY, INFORMAL_TAX, GNAME, G_PRIMARY_COMMON_NAME, RND, USESA, BLM_SSS_STATES, RANGE_EXTENT_DESC, RANGE_EXTENT_CD, Explorer.url, ExplorerPro.url) %>%
  rename(NatureServe_Element_ID = ELEMENT_GLOBAL_ID, Major_Group= NAME_CATEGORY, Higher_Level_Informal_Group = INFORMAL_GRP, Lower_Level_Informal_Group = INFORMAL_TAX, Scientific_Name = GNAME, NatureServe_Common_Name = G_PRIMARY_COMMON_NAME, Rounded_Global_Rank = RND, ESA_Status = USESA, BLM_SSS_States = BLM_SSS_STATES)

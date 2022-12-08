@@ -8,7 +8,7 @@ library(googlesheets4)
 
 #sss<-read_excel(path = "Data/Prioritization_Tool_11Aug2022.xlsx", sheet = "Data")
 #sss<-read_excel(path = "Data/NatureServe - Random Test Species - National Data_19 Oct 2022.xlsx", sheet= "Sheet1")
-sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2022-12-06")
+sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2022-12-08")
 sss$USFWS_Recovery_Priority_Num<-as.character(sss$USFWS_Recovery_Priority_Num)
 sss$USFWS_Recovery_Priority_Num[which(sss$USFWS_Recovery_Priority_Num == "NULL")] <- NA
 
