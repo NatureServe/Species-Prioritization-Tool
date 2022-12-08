@@ -33,7 +33,7 @@ prioritize <- function (data, species, threshold.eo, threshold.model, threshold.
                                                                       !Management.responsibility.model ~ F))
   
   ##Imperilment: Species is ESA listed, proposed, candidate' Species ranked G1, G2, T1, T2
-  results$Imperiled<-ifelse((!is.na(results$ESA_Status) & results$ESA_Status!="DL" & results$ESA_Status != 0) | (results$Rounded_Global_Rank %in% c("G1", "G2", "T1", "T2") & results$NO_KNOWN_THREATS == 0), T, F)
+  results$Imperiled<-ifelse((!is.na(results$ESA_Status) & results$ESA_Status!="DL: Delisted" & results$ESA_Status != 0) | (results$Rounded_Global_Rank %in% c("G1", "G2", "T1", "T2") & results$NO_KNOWN_THREATS == 0), T, F)
   
   ##Conservation Practicability: BLM Assessment derived from USFWS recovery priority numbers
   results$Conservation.practicability <- ifelse(results$BLM_Practicability_Score > threshold.practical, T, F)
@@ -49,6 +49,34 @@ prioritize <- function (data, species, threshold.eo, threshold.model, threshold.
   
   ##Monitoring Priority: Species has an unknown short-term trend and its rank was reviewed in the past 10 years
   results$Monitoring.Priority <- ifelse(results$`S_TREND` == "U = Unknown" & results$Rank_Review_Year > (as.numeric(format(Sys.Date(), "%Y"))-10), T, F)
+  
+  ##Description of tier evaluation
+  results$Evaluation <- ""
+  results$Evaluation <- ifelse(test = is.na(results$Management.responsibility),
+                              yes = paste0(results$Evaluation, "BLM's stewardship responsibility to the ", results$NatureServe_Common_Name," is unknown due to a lack of spatial data. "),
+                              no = ifelse(test = results$Management.responsibility,
+                                          yes = paste0(results$Evaluation, "The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. "),
+                                          no = paste0(results$Evaluation, "The ", results$NatureServe_Common_Name," has low or no occurence on BLM-managed lands. ")))
+  results$Evaluation <- ifelse(test = results$Imperiled,
+                              yes = paste0(results$Evaluation, "It is imperiled (ESA listed, under review, or G1/G2). "),
+                              no = paste0(results$Evaluation, "It is not imperiled. "))
+  results$Evaluation <- ifelse(test = results$Conservation.practicability,
+                              yes = paste0(results$Evaluation, "There is sufficient conservation practicability. "),
+                              no = paste0(results$Evaluation, "It would be difficult to implement conservation actions for this taxon. "))
+  results$Evaluation <- ifelse(test = results$Endemic,
+                              yes = paste0(results$Evaluation, "It has a restricted range. "),
+                              no = paste0(results$Evaluation, "It does not have a restricted range. "))
+  results$Evaluation <- ifelse(test = results$BLM_Threats,
+                              yes = paste0(results$Evaluation, "It is affected by threats that BLM can mitigate. "),
+                              no = paste0(results$Evaluation, "It is not affected by threats that BLM can mitigate. "))
+  results$Evaluation <- ifelse(test = results$Multispecies,
+                              yes = paste0(results$Evaluation, "There are multispecies benefits to its conservation. "),
+                              no = paste0(results$Evaluation, "There are not sufficient multispecies benefits to its conservation. "))
+  results$Evaluation <- ifelse(test = results$Partnering,
+                              yes = paste0(results$Evaluation, "There are partnering opportunities for its conservation. "),
+                              no = paste0(results$Evaluation, "There are not sufficient partnering opportunities for its conservation. "))
+  ##remove trailing white space
+  results$Evaluation <- trimws(results$Evaluation)
   
   ##ASSIGN TO TIERS
   ##Tier 1

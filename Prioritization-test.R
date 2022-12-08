@@ -29,7 +29,6 @@ library(RColorBrewer)
 
 ##Plot number of species in each tier
 data.plot<-data.frame(table(results$Tier))
-
 ##get the label positions
 data.plot <- data.plot %>%
   #arrange(desc(Var1)) %>%

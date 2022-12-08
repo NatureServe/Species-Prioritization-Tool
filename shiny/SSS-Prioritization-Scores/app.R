@@ -13,12 +13,12 @@ library(shinyWidgets)
 library(shinyauthr)
 library(shinyjs)
 
-.rs.files.restoreBindings() ##run this to publish app
+# .rs.files.restoreBindings() ##run this to publish app
 
 #'
 #' Google oauth authentication
-drive_auth(path = "BLM-Scores/skilful-berm-368100-59d29742d3f1.json")
-gs4_auth(path = "BLM-Scores/skilful-berm-368100-59d29742d3f1.json")
+# drive_auth(path = "BLM-Scores/skilful-berm-368100-59d29742d3f1.json")
+# gs4_auth(path = "BLM-Scores/skilful-berm-368100-59d29742d3f1.json")
 
 #' Alternative authentication (subject to 2 factor)
 #' #' ## designate project-specific cache
@@ -48,14 +48,15 @@ user_base <- dplyr::tibble(
 #'
 #' # Load Data
 #' ## Initial scores
-latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2022-12-06") %>%
+latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2022-12-08") %>%
   data.frame(stringsAsFactors = TRUE) %>%
   rename_with(.fn = gsub,pattern = "\\.", replacement = " ") %>%
   rename_with(.fn = gsub,pattern = "_", replacement = " ") %>% 
   dplyr::mutate(Notes = as.character(NA),
                 `Higher Level Informal Group` = as.factor(`Higher Level Informal Group`),
-                `Scientific Name` = paste0("<a href='", `Explorer url`,"' target='_blank'>", `Scientific Name`,"</a>")) %>% 
-  dplyr::select("Higher Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "ESA Status", "BLM SSS States", "USFWS Recovery Priority Num", "BLM Practicability Score", "BLM Mutispecies Score", "BLM Partnering Score", "HQ Notes", "Tier", "Notes")
+                `Scientific Name` = paste0("<a href='", `Explorer url`,"' target='_blank'>", `Scientific Name`,"</a>"),
+                Evaluation = paste(Evaluation, ifelse(is.na(`HQ Notes`),"",`HQ Notes`))) %>% 
+  dplyr::select("Higher Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "ESA Status", "BLM SSS States", "USFWS Recovery Priority Num", "BLM Practicability Score", "BLM Mutispecies Score", "BLM Partnering Score", "Evaluation", "Tier", "Notes")
 ## Replace scientific name with active natureserve explorer url
 
 ### Shiny App
@@ -117,6 +118,16 @@ shinyApp(
                      fluidRow(p("4. Navigate to more pages of results using the menu at the bottom right of the table"), style = "padding-left: 15px;"),
                      fluidRow(p("5. After editing scores, select species for which you have reviewed the BLM scores by clicking on the row. Note that additional edits to cell values will reset the selected rows. If you have reviewed all species in your state, use the 'Mark BLM scores for all species in your state as reviewed' toggle at the bottom of the page as a shortcut"), style = "padding-left: 15px;"),
                      fluidRow(p("6. After you have clicked on every row for which you have reviewed the scores, click Submit!"), style = "padding-left: 15px;")
+                   ),
+                   
+                   fluidRow(
+                     fluidRow(p("**Refer to the decision tree and the Evaluation field in the table to interpret the assigned Tier**"), style = "padding-left: 18px;"),
+                     actionButton(inputId = "view_tree", label = "View Prioritization Decision Tree", style = "secondary"),
+                     tags$style(
+                       type = 'text/css',
+                       '.modal-dialog { width: fit-content !important; }'
+                     ),
+                     bsModal(id = "decisiontree", title = "Prioritization Decision Tree", trigger = "view_tree", img(src = "decision_tree.png"), size = "large")
                    ),
                    
                    # fluidRow(

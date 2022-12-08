@@ -123,7 +123,7 @@ server <- function(input, output) {
       fig
     })
     
-    output$data.table<-renderTable(subset(new_dat(), Tier == input$selected_Tier, select = c(INFORMAL_GRP, Scientific_Name, NatureServe_Common_Name, Tier)))
+    output$data.table<-renderTable(subset(new_dat(), Tier == input$selected_Tier, select = c(Scientific_Name, NatureServe_Common_Name, Tier)))
 }
 
 # Run the application 
