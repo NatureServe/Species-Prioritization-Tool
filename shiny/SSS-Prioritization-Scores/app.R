@@ -12,6 +12,9 @@ library(shinyBS)
 library(shinyWidgets)
 library(shinyauthr)
 library(shinyjs)
+
+.rs.files.restoreBindings() ##run this to publish app
+
 #'
 #' Google oauth authentication
 drive_auth(path = "BLM-Scores/skilful-berm-368100-59d29742d3f1.json")
@@ -190,9 +193,17 @@ shinyApp(
         if (input$selected_state != ""){
           shinyjs::show("filtered_table_panel")
           if (input$selected_state != ""){
-            latest_scores_edits$values <- state_scores$values %>%
-              dplyr::filter(grepl(x = `BLM SSS States`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID"), collapse = "|"))))
+            latest_scores_edits$values <- state_scores$values #%>%
+              # dplyr::filter(grepl(x = `BLM SSS States`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID"), collapse = "|"))))
             
+            ## Allow HQ to see taxa with no BLM SSS state (NA value)
+            if (input$selected_state != "Headquarters") {
+              latest_scores_edits$values <- latest_scores_edits$values %>%
+                filter(grepl(x = `BLM SSS States`, pattern = input$selected_state))
+            } else {
+              latest_scores_edits$values <- latest_scores_edits$values %>%
+                filter(grepl(x = `BLM SSS States`, pattern = paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID"), collapse = "|")) | is.na(`BLM SSS States`))
+              }
           }
         }
         
