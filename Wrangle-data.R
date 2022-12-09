@@ -42,8 +42,8 @@ qry <- paste0("SELECT
  , egt.g_rank_review_date
  , d_usesa.display_value usesa
  , d_short_term_trend.display_value S_Trend
- /*, d_range_extent.range_extent_cd
- , d_range_extent.range_extent_desc*/
+ , d_range_extent.range_extent_cd
+ , d_range_extent.range_extent_desc
 
 ,(case when sn.d_name_category_id in (1, 2, 3)  /******ANIMAL*******/ then 
 (DelimList('SELECT terrestrial_habitat_desc FROM d_terrestrial_habitat dth, animal_cag_terr_hab acth WHERE 
@@ -94,10 +94,10 @@ else '' end)    riverine_habitats
   AS BLM_SSS_states
 
 , DelimList('SELECT iucn_threat_category_desc FROM el_global_threats_assess, d_iucn_threat_category WHERE 
-        el_global_threats_assess.d_iucn_threat_category_id = d_iucn_threat_category.d_iucn_threat_category_id and el_global_threats_assess.element_global_id = '||egt.element_global_id, '; ') AS THREATS_DESC
+        el_global_threats_assess.d_iucn_threat_category_id = d_iucn_threat_category.d_iucn_threat_category_id and el_global_threats_assess.element_global_id = '||egt.element_global_id || 'ORDER BY iucn_threat_category_desc', '; ') AS THREATS_DESC
 
 , DelimList('SELECT iucn_threat_category_cd FROM el_global_threats_assess, d_iucn_threat_category WHERE 
-        el_global_threats_assess.d_iucn_threat_category_id = d_iucn_threat_category.d_iucn_threat_category_id and el_global_threats_assess.element_global_id = '||egt.element_global_id, '; ') AS THREATS
+        el_global_threats_assess.d_iucn_threat_category_id = d_iucn_threat_category.d_iucn_threat_category_id and el_global_threats_assess.element_global_id = '||egt.element_global_id || 'ORDER BY iucn_threat_category_cd', '; ') AS THREATS
 
 FROM 
 ELEMENT_GLOBAL egt 
@@ -111,7 +111,7 @@ ELEMENT_GLOBAL egt
  , el_natl_agency_status nas
  , d_usesa
  , d_short_term_trend
- /*, d_range_extent*/
+ , d_range_extent
  
 WHERE 
  egt.element_global_id = tg.element_global_id
@@ -124,7 +124,7 @@ and egt.element_global_id = ent.element_global_id
 and ent.element_national_id = nas.element_national_id
  and tg.d_usesa_id = d_usesa.d_usesa_id (+)
  and egr.d_short_term_trend_id = d_short_term_trend.d_short_term_trend_id (+)
-/*and egr.d_range_extent_id = d_range_extent.d_range_extent_id*/
+and egr.d_range_extent_id = d_range_extent.d_range_extent_id (+)
 /*and nas.agency_name like 'BLM West 2019-11%'
 and ent.nation_id = 225 
 and egt.inactive_ind = 'N'*/
@@ -142,16 +142,17 @@ dat<-sqlQuery(con, qry); head(dat) ##import the queried table
 odbcClose(con)
 
 sss.data <- dat %>% 
-  filter(!duplicated(ELEMENT_GLOBAL_ID)) %>%
+  # filter(!duplicated(ELEMENT_GLOBAL_ID)) %>%
+  unique() %>%
   mutate(Explorer.url = paste0("https://explorer.natureserve.org/Taxon/", EGUID, "/", sub(x=GNAME, pattern = " ", replacement = "_")),
          ExplorerPro.url = paste0("https://explorer.natureserve.org/pro/Map/?taxonUniqueId=", EGUID),
          `Habitat_Wetland/riparian` =  ifelse(!is.na(PALUSTRINE_HABITATS), T, F),
-         `Habitat_scrub/shrubland` = ifelse(grepl(TERRESTRIAL_HABITATS, pattern = "(?i)scrub|shrub"), T, F),
-         `Habitat_grassland/steppe/prairie` = ifelse(grepl(TERRESTRIAL_HABITATS, pattern = "(?i)grassland|steppe|prairie"), T, F),
-         # NS_Endemic = ifelse(grepl(RANGE_EXTENT_CD, pattern = "A|B|C|D|E") & !grepl(RANGE_EXTENT_CD, pattern = "G|H"), T, F),
-         # BLM_Threats = strsplit(THREATS, split = "; ") %>% unlist(recursive=F) %in% c("1.2","1.3","2.3","2.3.1","2.3.2","2.3.4","3.1","3.2","3.3","6.1","3") %>% any(), ##not working properly
+         `Habitat_scrub/shrubland` = ifelse(grepl(TERRESTRIAL_HABITATS, pattern = "(?i)scrub|(?i)shrub"), T, F),
+         `Habitat_grassland/steppe/prairie` = ifelse(grepl(TERRESTRIAL_HABITATS, pattern = "(?i)grassland|(?i)steppe|(?i)prairie"), T, F),
+         NS_Range_Restricted = ifelse(grepl(RANGE_EXTENT_CD, pattern = "A|B|C|D|E") & !grepl(RANGE_EXTENT_CD, pattern = "G|H"), T, F),
          BLM_Threats = ifelse(grepl(strsplit(THREATS, split = "; "), pattern = "(?<!\\d|\\.)1.2|(?<!\\d|\\.)1.3|(?<!\\d|\\.)2.3|(?<!\\d|\\.)2.3.1|(?<!\\d|\\.)2.3.2|(?<!\\d|\\.)2.3.4|(?<!\\d|\\.)3.1|(?<!\\d|\\.)3.2|(?<!\\d|\\.)3.3|(?<!\\d|\\.)6.1|(?<!\\d|\\.)3", perl=T), T, F),
-         Rank_Review_Year = format(G_RANK_REVIEW_DATE, "%Y")) %>%
+         Rank_Review_Year = format(G_RANK_REVIEW_DATE, "%Y"),
+         USESA = sub(x = USESA, pattern = "\\:.*", replacement = "")) %>%
   # select(ELEMENT_GLOBAL_ID, NAME_CATEGORY, INFORMAL_TAX, GNAME, G_PRIMARY_COMMON_NAME, RND, USESA, BLM_SSS_STATES, RANGE_EXTENT_DESC, RANGE_EXTENT_CD, Explorer.url, ExplorerPro.url) %>%
  rename(NatureServe_Element_ID = ELEMENT_GLOBAL_ID, Major_Group= NAME_CATEGORY, Higher_Level_Informal_Group = INFORMAL_GRP, Lower_Level_Informal_Group = INFORMAL_TAX, Scientific_Name = GNAME, NatureServe_Common_Name = G_PRIMARY_COMMON_NAME, Rounded_Global_Rank = RND, ESA_Status = USESA, BLM_SSS_States = BLM_SSS_STATES)
 
@@ -160,7 +161,7 @@ BLM.scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/
   rename_with(~gsub(.x, pattern = " ", replacement = "_"))
 
 sss.data <- sss.data %>% 
-  left_join(y = subset(BLM.scores, select = c("NatureServe_Element_ID", "USFWS_Recovery_Priority_Num", "BLM_Practicability_Score", "BLM_Mutispecies_Score", "BLM_Partnering_Score", "Endemic", "HQ_Notes")))
+  left_join(y = subset(BLM.scores, select = c("NatureServe_Element_ID", "USFWS_Recovery_Priority_Num", "BLM_Practicability_Score", "BLM_Mutispecies_Score", "BLM_Partnering_Score", "Endemic", "HQ_Notes")) %>% rename(BLM_Range_Restricted = Endemic))
 
 ## Add results from jurisdictional analysis
 ja <- read_excel("C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Provided to BLM/BLM - Information for T & E Strategic Decision-Making - October 2022.xlsx", sheet = "BLM SSS Information by State", skip = 1) %>% 

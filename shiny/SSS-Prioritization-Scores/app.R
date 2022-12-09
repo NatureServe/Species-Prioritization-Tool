@@ -17,8 +17,8 @@ library(shinyjs)
 
 #'
 #' Google oauth authentication
-# drive_auth(path = "BLM-Scores/skilful-berm-368100-59d29742d3f1.json")
-# gs4_auth(path = "BLM-Scores/skilful-berm-368100-59d29742d3f1.json")
+drive_auth(path = "BLM-Scores/skilful-berm-368100-59d29742d3f1.json")
+gs4_auth(path = "BLM-Scores/skilful-berm-368100-59d29742d3f1.json")
 
 #' Alternative authentication (subject to 2 factor)
 #' #' ## designate project-specific cache
@@ -40,23 +40,24 @@ library(shinyjs)
 #' ## In this case, only one is needed
 user_base <- dplyr::tibble(
   user = c("blm_user"),
-  password = c("T@xon0m1c"),
-  # password = c("123"), #simple pw for testing
+  # password = c("T@xon0m1c"),
+  password = c("123"), #simple pw for testing
   permissions = c("admin"),
   name = c("BLM User")
 )
 #'
 #' # Load Data
 #' ## Initial scores
-latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2022-12-08") %>%
+latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2022-12-09") %>%
   data.frame(stringsAsFactors = TRUE) %>%
+  dplyr::mutate(Notes = as.character(NA),
+                Higher_Level_Informal_Group = as.factor(Higher_Level_Informal_Group),
+                Scientific_Name = paste0("<a href='", `Explorer.url`,"' target='_blank'>", Scientific_Name,"</a>"),
+                Evaluation = paste(Evaluation, ifelse(is.na(HQ_Notes),"",HQ_Notes)),
+                BLM_SSS_States = ifelse(is.na(BLM_SSS_States), "NA", BLM_SSS_States)) %>% 
   rename_with(.fn = gsub,pattern = "\\.", replacement = " ") %>%
   rename_with(.fn = gsub,pattern = "_", replacement = " ") %>% 
-  dplyr::mutate(Notes = as.character(NA),
-                `Higher Level Informal Group` = as.factor(`Higher Level Informal Group`),
-                `Scientific Name` = paste0("<a href='", `Explorer url`,"' target='_blank'>", `Scientific Name`,"</a>"),
-                Evaluation = paste(Evaluation, ifelse(is.na(`HQ Notes`),"",`HQ Notes`))) %>% 
-  dplyr::select("Higher Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "ESA Status", "BLM SSS States", "USFWS Recovery Priority Num", "BLM Practicability Score", "BLM Mutispecies Score", "BLM Partnering Score", "Evaluation", "Tier", "Notes")
+  dplyr::select("Higher Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "ESA Status", "BLM SSS States", "USFWS Recovery Priority Num", "Evaluation", "Tier", "BLM Practicability Score", "BLM Mutispecies Score", "BLM Partnering Score", "Notes")
 ## Replace scientific name with active natureserve explorer url
 
 ### Shiny App
@@ -204,17 +205,17 @@ shinyApp(
         if (input$selected_state != ""){
           shinyjs::show("filtered_table_panel")
           if (input$selected_state != ""){
-            latest_scores_edits$values <- state_scores$values #%>%
-              # dplyr::filter(grepl(x = `BLM SSS States`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID"), collapse = "|"))))
+            latest_scores_edits$values <- state_scores$values %>%
+              dplyr::filter(grepl(x = `BLM SSS States`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|"))))
             
-            ## Allow HQ to see taxa with no BLM SSS state (NA value)
-            if (input$selected_state != "Headquarters") {
-              latest_scores_edits$values <- latest_scores_edits$values %>%
-                filter(grepl(x = `BLM SSS States`, pattern = input$selected_state))
-            } else {
-              latest_scores_edits$values <- latest_scores_edits$values %>%
-                filter(grepl(x = `BLM SSS States`, pattern = paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID"), collapse = "|")) | is.na(`BLM SSS States`))
-              }
+            ## Allow HQ to see taxa with no BLM SSS state (NA value) - changed NA to character above
+            # if (input$selected_state != "Headquarters") {
+            #   latest_scores_edits$values <- latest_scores_edits$values %>%
+            #     filter(grepl(x = `BLM SSS States`, pattern = input$selected_state))
+            # } else {
+            #   latest_scores_edits$values <- latest_scores_edits$values %>%
+            #     filter(grepl(x = `BLM SSS States`, pattern = paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")) | is.na(`BLM SSS States`))
+            #   }
           }
         }
         
@@ -225,8 +226,10 @@ shinyApp(
       # Add this code if need to add Login module
       req(credentials()$user_auth)
       
-      datatable(latest_scores_edits$values, options = list(dom = 'tp', pageLength = 10), editable = list(target = "cell", disable = list(columns = c(1:7, 11:12))), selection = list(mode = "multiple", target = "row"), filter = list(position = 'top', columns = c(1, 4:7)), escape = F) %>%
-        formatStyle(columns = c(8:10, 13), backgroundColor = "lightyellow")
+      n.cols<-ncol(latest_scores_edits$values)
+      
+      datatable(latest_scores_edits$values, options = list(dom = 'tp', pageLength = 10), editable = list(target = "cell", disable = list(columns = c(1:(n.cols-4)))), selection = list(mode = "multiple", target = "row"), filter = list(position = 'top', columns = c(1,(n.cols-5):(n.cols-2))), escape = F) #%>%
+        # formatStyle(columns = c((n.cols-3):n.cols), backgroundColor = "lightyellow")
       
     })
     

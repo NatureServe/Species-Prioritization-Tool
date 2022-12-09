@@ -5,7 +5,7 @@
 prioritize <- function (data, species, threshold.eo, threshold.model, threshold.practical, threshold.partner) {
   
   ## Check if all input parameters exist. If not, print an error
-  required.inputs<-c("Scientific_Name", "Percent_EOs_BLM", "Percent_Model_Area_BLM", "ESA_Status", "Rounded_Global_Rank", "NO_KNOWN_THREATS", "BLM_Practicability_Score", "Habitat_Wetland/riparian", "Habitat_scrub/shrubland", "Habitat_grassland/steppe/prairie", "BLM_Mutispecies_Score", "BLM_Partnering_Score", "S_TREND", "Rank_Review_Year", "Endemic", "BLM_Threats")
+  required.inputs<-c("Scientific_Name", "Percent_EOs_BLM", "Percent_Model_Area_BLM", "ESA_Status", "Rounded_Global_Rank", "NO_KNOWN_THREATS", "BLM_Practicability_Score", "Habitat_Wetland/riparian", "Habitat_scrub/shrubland", "Habitat_grassland/steppe/prairie", "BLM_Mutispecies_Score", "BLM_Partnering_Score", "S_TREND", "Rank_Review_Year", "NS_Range_Restricted", "BLM_Threats")
   missing.inputs<-required.inputs[which(!(required.inputs %in% names(data)))]
   if (length(missing.inputs)>0){
     stop(paste0("the following inputs are missing from the input dataset: ", paste0(missing.inputs, collapse = ", ")))
@@ -33,7 +33,7 @@ prioritize <- function (data, species, threshold.eo, threshold.model, threshold.
                                                                       !Management.responsibility.model ~ F))
   
   ##Imperilment: Species is ESA listed, proposed, candidate' Species ranked G1, G2, T1, T2
-  results$Imperiled<-ifelse((!is.na(results$ESA_Status) & results$ESA_Status!="DL: Delisted" & results$ESA_Status != 0) | (results$Rounded_Global_Rank %in% c("G1", "G2", "T1", "T2") & results$NO_KNOWN_THREATS == 0), T, F)
+  results$Imperiled<-ifelse((!is.na(results$ESA_Status) & results$ESA_Status!="DL" & results$ESA_Status != 0) | (results$Rounded_Global_Rank %in% c("G1", "G2", "T1", "T2") & results$NO_KNOWN_THREATS == 0), T, F)
   
   ##Conservation Practicability: BLM Assessment derived from USFWS recovery priority numbers
   results$Conservation.practicability <- ifelse(results$BLM_Practicability_Score > threshold.practical, T, F)
@@ -63,7 +63,7 @@ prioritize <- function (data, species, threshold.eo, threshold.model, threshold.
   results$Evaluation <- ifelse(test = results$Conservation.practicability,
                               yes = paste0(results$Evaluation, "There is sufficient conservation practicability. "),
                               no = paste0(results$Evaluation, "It would be difficult to implement conservation actions for this taxon. "))
-  results$Evaluation <- ifelse(test = results$Endemic,
+  results$Evaluation <- ifelse(test = results$NS_Range_Restricted,
                               yes = paste0(results$Evaluation, "It has a restricted range. "),
                               no = paste0(results$Evaluation, "It does not have a restricted range. "))
   results$Evaluation <- ifelse(test = results$BLM_Threats,
@@ -93,10 +93,10 @@ prioritize <- function (data, species, threshold.eo, threshold.model, threshold.
   
   ##Overwrite the tiers for endemics if applicable
   ##Endemic: Tier 1
-  results$Tier[which(results$Management.responsibility & results$Imperiled & results$Conservation.practicability & results$Endemic & results$BLM_Threats)] <- "Tier 1"
+  results$Tier[which(results$Management.responsibility & results$Imperiled & results$Conservation.practicability & results$NS_Range_Restricted & results$BLM_Threats)] <- "Tier 1"
   
   ##Endemic: Tier 2
-  results$Tier[which(results$Management.responsibility & results$Imperiled & results$Conservation.practicability & results$Endemic & !results$BLM_Threats)] <- "Tier 2"
+  results$Tier[which(results$Management.responsibility & results$Imperiled & results$Conservation.practicability & results$NS_Range_Restricted & !results$BLM_Threats)] <- "Tier 2"
   
   ## Data deficient as a tier (unknown management responsibility)
   results$Tier[which(is.na(results$Management.responsibility))] <- "Data deficient"
