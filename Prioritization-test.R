@@ -5,6 +5,7 @@
 library(readxl)
 library(tidyverse)
 library(googlesheets4)
+library(openxlsx)
 
 #sss<-read_excel(path = "Data/Prioritization_Tool_11Aug2022.xlsx", sheet = "Data")
 #sss<-read_excel(path = "Data/NatureServe - Random Test Species - National Data_19 Oct 2022.xlsx", sheet= "Sheet1")
@@ -26,17 +27,28 @@ sheet_write(data = results, ss = "https://docs.google.com/spreadsheets/d/1KIpQPL
 
 ## Format results for BLM
 results_by_tier <- data.frame(matrix(NA, nrow=max(table(results$Tier)), ncol=5))
-names(results_by_tier) <- unique(results$Tier) %>% sort()
+names(results_by_tier) <- c("Tier 1", "Tier 2", "Tier 3", "Tier 4", "Data deficient")
 for (j in 1:ncol(results_by_tier)) {
-  tier.temp <- sort(unique(results$Tier))[j]
+  tier.temp <- names(results_by_tier)[j]
   spp.temp <- subset(results, Tier == tier.temp)$NatureServe_Common_Name
   results_by_tier[1:length(spp.temp),j] <- spp.temp
 }
+head(results_by_tier)
+
+metadata <- read.xlsx(xlsxFile = "C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Species Prioritization Tool/ESA Species/Prioritization-metadata.xlsx")
+metadata$Description[which(metadata$Name == "Date")] <- format(Sys.Date(), "%m-%d-%Y")
 
 results_file_name <- paste0("C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Species Prioritization Tool/ESA Species/Prioritization-results-ESA-spp-", Sys.Date(), ".xlsx")
-list_of_datasheets <- list("Results" = results_by_tier,
-                           "Prioritization-input" = sss.data)
-write.xlsx(list_of_datasheets, file = results_file_name)
+wb <- openxlsx::createWorkbook()
+addWorksheet(wb, "Metadata")
+writeData(wb, "Metadata", metadata, headerStyle = createStyle(textDecoration = "Bold"))
+addWorksheet(wb, "Ruleset")
+insertImage(wb, "Ruleset", "shiny/SSS-Prioritization-Scores/www/decision_tree.png", width = 6, height = 8)
+addWorksheet(wb, "Results")
+writeData(wb, "Results", results_by_tier, headerStyle = createStyle(textDecoration = "Bold"))
+addWorksheet(wb, "Data")
+writeData(wb, "Data", results, headerStyle = createStyle(textDecoration = "Bold"))
+openxlsx::saveWorkbook(wb, results_file_name)
 
 
 ##Plot results

@@ -8,7 +8,6 @@ library(tidyverse)
 library(RODBC)
 library(googlesheets4)
 library(googledrive)
-library(openxlsx)
 
 ## Check which species have EOs in the spatial snapshot for jurisdictional analysis
 ## Load sss from esa batch

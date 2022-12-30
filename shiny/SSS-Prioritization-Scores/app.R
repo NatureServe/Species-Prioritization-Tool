@@ -39,7 +39,7 @@ gs4_auth(path = "BLM-Scores/skilful-berm-368100-59d29742d3f1.json")
 #' ## Define database of authenticated users
 #' ## In this case, only one is needed
 user_base <- dplyr::tibble(
-  user = c("blm_user"),
+  user = c("blm"), ## blm_user
   # password = c("T@xon0m1c"),
   password = c("123"), #simple pw for testing
   permissions = c("admin"),
@@ -200,7 +200,7 @@ shinyApp(
       
     })
     
-    # previousPage <- NULL
+    # previousPage <- NULL ##previous page arguments now allow you to preseve the page when you edit a score, but it doesn't work with a filter (ends up removing the filter)
     
     # state_scores <- reactiveValues(values = latest_scores)
     shinyInput <- function(FUN, len, id, ...) {
@@ -238,10 +238,10 @@ shinyApp(
       n.cols<-ncol(latest_scores_edits$values)
       
       datatable(latest_scores_edits$values, 
-                options = list(dom = 'tp', pageLength = 10), ## displayStart = previousPage
+                options = list(dom = 'tp', pageLength = 10),# , displayStart = previousPage),
                 editable = list(target = "cell", disable = list(columns = c(1:(n.cols-4)))), 
                 selection = list(mode = "multiple", target = "row"), 
-                filter = list(position = 'top', columns = c(1,(n.cols-5):(n.cols-2))), escape = F) #%>%
+                filter = list(position = 'top', columns = 1:n.cols), escape = F) #%>%
         # formatStyle(columns = c((n.cols-3):n.cols), backgroundColor = "lightyellow")
       
     })
@@ -250,7 +250,6 @@ shinyApp(
     filtered_table_proxy <- dataTableProxy("filtered_table")
     
     observeEvent(input$filtered_table_cell_edit, {
-      # previousPage <<- input$table_rows_current[1]-1
       
       latest_scores_edits$values <<- editData(latest_scores_edits$values, input$filtered_table_cell_edit, 'filtered_table')
       
@@ -263,6 +262,8 @@ shinyApp(
       }
       
       print(input$filtered_table_search_columns)
+  
+      # previousPage <<- input$filtered_table_rows_current[1]-1
       
     })
     
