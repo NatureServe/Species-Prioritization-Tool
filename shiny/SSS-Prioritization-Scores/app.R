@@ -48,16 +48,16 @@ user_base <- dplyr::tibble(
 #'
 #' # Load Data
 #' ## Initial scores
-latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2022-12-09") %>%
+latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2022-12-29") %>%
   data.frame(stringsAsFactors = TRUE) %>%
   dplyr::mutate(Notes = as.character(NA),
                 Higher_Level_Informal_Group = as.factor(Higher_Level_Informal_Group),
                 Scientific_Name = paste0("<a href='", `Explorer.url`,"' target='_blank'>", Scientific_Name,"</a>"),
-                Evaluation = paste(Evaluation, ifelse(is.na(HQ_Notes),"",HQ_Notes)),
+                Evaluation = paste(Evaluation, ifelse(is.na(HQ_Notes),"",paste0("Comments from BLM HQ: ", HQ_Notes))),
                 BLM_SSS_States = ifelse(is.na(BLM_SSS_States), "NA", BLM_SSS_States)) %>% 
   rename_with(.fn = gsub,pattern = "\\.", replacement = " ") %>%
-  rename_with(.fn = gsub,pattern = "_", replacement = " ") %>% 
-  dplyr::select("Higher Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "ESA Status", "BLM SSS States", "USFWS Recovery Priority Num", "Evaluation", "Tier", "BLM Practicability Score", "BLM Mutispecies Score", "BLM Partnering Score", "Notes")
+  rename_with(.fn = gsub,pattern = "_", replacement = " ") #%>% 
+  #dplyr::select("Higher Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "ESA Status", "BLM SSS States", "USFWS Recovery Priority Num", "Evaluation", "Tier", "BLM Practicability Score", "BLM Multispecies Score", "BLM Partnering Score", "Notes")
 ## Replace scientific name with active natureserve explorer url
 
 ### Shiny App
@@ -73,6 +73,12 @@ shinyApp(
     theme = "style.css",
     
     shinyjs::useShinyjs(),
+    
+    # js function to reset a button, variableName is the button name whose value we want to reset
+    tags$script("Shiny.addCustomMessageHandler('resetInputValue', function(variableName){
+                Shiny.onInputChange(variableName, null);
+                });
+                "),
     
     shinyjs::hidden(
       div(id = "user_interface",
@@ -104,7 +110,7 @@ shinyApp(
                      ),
                      column(width = 2, 
                             fluidRow(h4("BLM affiliation: ")),
-                            fluidRow(selectizeInput("selected_state", "", choices = c("", "Headquarters", gsub(" ", "", gsub(" ", "", sort(unique(strsplit(paste0(latest_scores$`BLM SSS States`, collapse = ","), split = ",")[[1]]))))) %>% unique(), width = "100%"))
+                            fluidRow(selectizeInput("selected_state", "", choices = c("", "Headquarters", sort(gsub(" ", "", gsub(" ", "", unique(strsplit(paste0(latest_scores$`BLM SSS States`, collapse = ","), split = ",")[[1]]))))), width = "100%"))
                      )
                    ),
                    
@@ -114,15 +120,15 @@ shinyApp(
                      
                      fluidRow(p("Instructions:"), style = "padding-left: 15px;"),
                      fluidRow(p("1. Use the dropdown menu 'BLM affiliation' above to see scores for taxa in your state."), style = "padding-left: 15px;"),
-                     fluidRow(p("2. Use the dropdown menus below the field names in the table below to filter the table."), style = "padding-left: 15px;"),
-                     fluidRow(p("3. Review BLM scores and resulting Tier assignments for relevant species. Double-click on any cell highlighted in yellow to edit its value - make sure you click outside the cell to save your entry before moving on to a different one"), style = "padding-left: 15px;"),
+                     fluidRow(p("2. Use the filtering cells below the field names in the table below to filter the table."), style = "padding-left: 15px;"),
+                     fluidRow(p("3. Review BLM scores and resulting Tier assignments for relevant species. Double-click on any cell in the last 4 columns to edit its value - make sure you click outside the cell to save your entry before moving on to a different one"), style = "padding-left: 15px;"),
                      fluidRow(p("4. Navigate to more pages of results using the menu at the bottom right of the table"), style = "padding-left: 15px;"),
                      fluidRow(p("5. After editing scores, select species for which you have reviewed the BLM scores by clicking on the row. Note that additional edits to cell values will reset the selected rows. If you have reviewed all species in your state, use the 'Mark BLM scores for all species in your state as reviewed' toggle at the bottom of the page as a shortcut"), style = "padding-left: 15px;"),
                      fluidRow(p("6. After you have clicked on every row for which you have reviewed the scores, click Submit!"), style = "padding-left: 15px;")
                    ),
                    
                    fluidRow(
-                     fluidRow(p("**Refer to the decision tree and the Evaluation field in the table to interpret the assigned Tier**"), style = "padding-left: 18px;"),
+                     fluidRow(p("**Refer to the decision tree and the Assessment field in the table to interpret the assigned Tier**"), style = "padding-left: 18px;"),
                      actionButton(inputId = "view_tree", label = "View Prioritization Decision Tree", style = "secondary"),
                      tags$style(
                        type = 'text/css',
@@ -166,7 +172,8 @@ shinyApp(
                    )
           )
       )
-    )
+    ),
+    uiOutput("modal")
   ),
   server = function(input, output, session) {
     
@@ -193,7 +200,18 @@ shinyApp(
       
     })
     
-    state_scores <- reactiveValues(values = latest_scores)
+    # previousPage <- NULL
+    
+    # state_scores <- reactiveValues(values = latest_scores)
+    shinyInput <- function(FUN, len, id, ...) {
+      inputs <- character(len)
+      for (i in seq_len(len)) {
+        inputs[i] <- as.character(FUN(paste0(id, i), ...))
+      }
+      inputs
+    }
+    
+    state_scores <- reactiveValues(values = cbind(subset(latest_scores, select=c("Higher Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "ESA Status", "BLM SSS States", "Tier")), Assessment = shinyInput(actionButton, nrow(latest_scores), 'button_', label = "Assessment", onclick = 'Shiny.onInputChange(\"select_button\",  this.id)' ), subset(latest_scores, select=c("BLM Practicability Score", "BLM Multispecies Score", "BLM Partnering Score", "Notes"))))
     latest_scores_edits <- reactiveValues(values = latest_scores)
     
     observeEvent(
@@ -207,15 +225,6 @@ shinyApp(
           if (input$selected_state != ""){
             latest_scores_edits$values <- state_scores$values %>%
               dplyr::filter(grepl(x = `BLM SSS States`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|"))))
-            
-            ## Allow HQ to see taxa with no BLM SSS state (NA value) - changed NA to character above
-            # if (input$selected_state != "Headquarters") {
-            #   latest_scores_edits$values <- latest_scores_edits$values %>%
-            #     filter(grepl(x = `BLM SSS States`, pattern = input$selected_state))
-            # } else {
-            #   latest_scores_edits$values <- latest_scores_edits$values %>%
-            #     filter(grepl(x = `BLM SSS States`, pattern = paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")) | is.na(`BLM SSS States`))
-            #   }
           }
         }
         
@@ -228,7 +237,11 @@ shinyApp(
       
       n.cols<-ncol(latest_scores_edits$values)
       
-      datatable(latest_scores_edits$values, options = list(dom = 'tp', pageLength = 10), editable = list(target = "cell", disable = list(columns = c(1:(n.cols-4)))), selection = list(mode = "multiple", target = "row"), filter = list(position = 'top', columns = c(1,(n.cols-5):(n.cols-2))), escape = F) #%>%
+      datatable(latest_scores_edits$values, 
+                options = list(dom = 'tp', pageLength = 10), ## displayStart = previousPage
+                editable = list(target = "cell", disable = list(columns = c(1:(n.cols-4)))), 
+                selection = list(mode = "multiple", target = "row"), 
+                filter = list(position = 'top', columns = c(1,(n.cols-5):(n.cols-2))), escape = F) #%>%
         # formatStyle(columns = c((n.cols-3):n.cols), backgroundColor = "lightyellow")
       
     })
@@ -237,6 +250,7 @@ shinyApp(
     filtered_table_proxy <- dataTableProxy("filtered_table")
     
     observeEvent(input$filtered_table_cell_edit, {
+      # previousPage <<- input$table_rows_current[1]-1
       
       latest_scores_edits$values <<- editData(latest_scores_edits$values, input$filtered_table_cell_edit, 'filtered_table')
       
@@ -250,6 +264,26 @@ shinyApp(
       
       print(input$filtered_table_search_columns)
       
+    })
+    
+    Eval <- reactiveValues(text = '')
+    # supplement <- reactiveValues()
+    
+    observeEvent(input$select_button, {
+      s <- as.numeric(strsplit(input$select_button, "_")[[1]][2])
+      Eval$text <<- latest_scores$Evaluation[s]
+      output$scores <- renderTable(subset(latest_scores, select=c("Percent EOs BLM 2019", "Percent Model Area BLM", "Percent eo AB BLM", "USFWS Recovery Priority Num"))[s,] %>% rename("Percent of EOs on BLM-administered lands" = "Percent EOs BLM 2019", "Percent of modeled habitat on BLM-administered lands" = "Percent Model Area BLM", "Percent of EOs with rank A/B on BLM-administered lands" = "Percent eo AB BLM"))
+      output$modal <- renderUI({
+        tagList(
+          bsModal(paste('model', s ,sep=''), "Assessment", "select_button", size = "small",
+                  p(renderText({Eval$text})),
+                  h5("Table 1. Additional input data for prioritization of this taxon. NA values indicate that no data were available for assessment."),
+                  tableOutput("scores")
+          ))
+      })
+      toggleModal(session,paste('model', s ,sep=''), toggle = "Assessment")
+      ##Reset the select_button
+      session$sendCustomMessage(type = 'resetInputValue', message =  "select_button")
     })
     
     observeEvent(input$reviewed_all, {      
@@ -279,7 +313,7 @@ shinyApp(
                         `Reviewer Affiliation` = input$selected_state,
                         `Scientific Name` = sub(pattern = ".*>(.+)</a>.*", x = `Scientific Name`, replacement = "\\1") #find text in between >link text</a>
           ) %>% 
-          dplyr::select(`Reviewer Name`, `Reviewer Email`, `Reviewer Affiliation`, names(latest_scores_edits$values))
+          dplyr::select(`Reviewer Name`, `Reviewer Email`, `Reviewer Affiliation`, `Scientific Name`, `NatureServe Common Name`, `Tier`, `BLM Practicability Score`,	`BLM Multispecies Score`,	`BLM Partnering Score`, `Notes`)
         
         sheet_append(ss = "https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", data = reviewed_scores, sheet = "suggested_scores")
         # session$reload()

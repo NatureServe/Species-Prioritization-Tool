@@ -8,7 +8,7 @@ library(googlesheets4)
 
 #sss<-read_excel(path = "Data/Prioritization_Tool_11Aug2022.xlsx", sheet = "Data")
 #sss<-read_excel(path = "Data/NatureServe - Random Test Species - National Data_19 Oct 2022.xlsx", sheet= "Sheet1")
-sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2022-12-09")
+sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2022-12-29")
 sss$USFWS_Recovery_Priority_Num<-as.character(sss$USFWS_Recovery_Priority_Num)
 sss$USFWS_Recovery_Priority_Num[which(sss$USFWS_Recovery_Priority_Num == "NULL")] <- NA
 
@@ -22,7 +22,22 @@ results<-prioritize(data = sss)
 
 sheet_write(data = results, ss = "https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet = paste0("ESA_spp_", Sys.Date()))
 
-write.csv(results, file=paste0("C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Species Prioritization Tool/ESA Species/prioritization-results-",Sys.Date(),".csv"), row.names=FALSE)
+# write.csv(results, file=paste0("C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Species Prioritization Tool/ESA Species/prioritization-results-",Sys.Date(),".csv"), row.names=FALSE)
+
+## Format results for BLM
+results_by_tier <- data.frame(matrix(NA, nrow=max(table(results$Tier)), ncol=5))
+names(results_by_tier) <- unique(results$Tier) %>% sort()
+for (j in 1:ncol(results_by_tier)) {
+  tier.temp <- sort(unique(results$Tier))[j]
+  spp.temp <- subset(results, Tier == tier.temp)$NatureServe_Common_Name
+  results_by_tier[1:length(spp.temp),j] <- spp.temp
+}
+
+results_file_name <- paste0("C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Species Prioritization Tool/ESA Species/Prioritization-results-ESA-spp-", Sys.Date(), ".xlsx")
+list_of_datasheets <- list("Results" = results_by_tier,
+                           "Prioritization-input" = sss.data)
+write.xlsx(list_of_datasheets, file = results_file_name)
+
 
 ##Plot results
 library(RColorBrewer)

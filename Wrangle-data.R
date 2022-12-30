@@ -8,6 +8,7 @@ library(tidyverse)
 library(RODBC)
 library(googlesheets4)
 library(googledrive)
+library(openxlsx)
 
 ## Check which species have EOs in the spatial snapshot for jurisdictional analysis
 ## Load sss from esa batch
@@ -87,7 +88,7 @@ else '' end)    riverine_habitats
     || s.subnation_code ||   ''''  AS subnatl_dist '
     || ' FROM element_subnational, subnation s, taxon_subnatl_sprot_ext ts_ext
          WHERE element_subnational.subnation_id = s.subnation_id and element_subnational.element_subnational_id = ts_ext.element_subnational_id
-         and ts_ext.blm_sss = ''Y''
+         and ts_ext.blm_sss_2019 = ''Y''
          and element_subnational.element_national_id IN ' 
     || '(SELECT element_national_id FROM element_national WHERE element_global_id='  
     || egt.element_global_id || ') ORDER BY s.nation_id desc, SUBNATL_DIST ', ', ') 
@@ -142,34 +143,47 @@ dat<-sqlQuery(con, qry); head(dat) ##import the queried table
 odbcClose(con)
 
 sss.data <- dat %>% 
-  # filter(!duplicated(ELEMENT_GLOBAL_ID)) %>%
+  filter(!duplicated(ELEMENT_GLOBAL_ID)) %>%
   unique() %>%
   mutate(Explorer.url = paste0("https://explorer.natureserve.org/Taxon/", EGUID, "/", sub(x=GNAME, pattern = " ", replacement = "_")),
          ExplorerPro.url = paste0("https://explorer.natureserve.org/pro/Map/?taxonUniqueId=", EGUID),
-         `Habitat_Wetland/riparian` =  ifelse(!is.na(PALUSTRINE_HABITATS), T, F),
-         `Habitat_scrub/shrubland` = ifelse(grepl(TERRESTRIAL_HABITATS, pattern = "(?i)scrub|(?i)shrub"), T, F),
-         `Habitat_grassland/steppe/prairie` = ifelse(grepl(TERRESTRIAL_HABITATS, pattern = "(?i)grassland|(?i)steppe|(?i)prairie"), T, F),
+         Riparian = ifelse((!is.na(RIVERINE_HABITATS) & !RIVERINE_HABITATS=="(?i)Aerial") | grepl(PALUSTRINE_HABITATS, pattern = "(?i)riparian"), T, F),
+         `Habitat_Wetland/riparian` =  ifelse((!is.na(RIVERINE_HABITATS) & RIVERINE_HABITATS!="(?i)Aerial") | !is.na(PALUSTRINE_HABITATS), T, F),
+         `Habitat_scrub/shrubland` = ifelse(grepl(TERRESTRIAL_HABITATS, pattern = "(?i)scrub|(?i)shrub|(?i)savanna"), T, F),
+         `Habitat_grassland/steppe/prairie` = ifelse(grepl(TERRESTRIAL_HABITATS, pattern = "(?i)grassland|(?i)steppe|(?i)prairie|(?i)Old Field|(?i)barrens"), T, F),
          NS_Range_Restricted = ifelse(grepl(RANGE_EXTENT_CD, pattern = "A|B|C|D|E") & !grepl(RANGE_EXTENT_CD, pattern = "G|H"), T, F),
-         BLM_Threats = ifelse(grepl(strsplit(THREATS, split = "; "), pattern = "(?<!\\d|\\.)1.2|(?<!\\d|\\.)1.3|(?<!\\d|\\.)2.3|(?<!\\d|\\.)2.3.1|(?<!\\d|\\.)2.3.2|(?<!\\d|\\.)2.3.4|(?<!\\d|\\.)3.1|(?<!\\d|\\.)3.2|(?<!\\d|\\.)3.3|(?<!\\d|\\.)6.1|(?<!\\d|\\.)3", perl=T), T, F),
+         BLM_Threats = ifelse(grepl(strsplit(THREATS, split = "; "), pattern = "(?<!\\d|\\.)1.2|(?<!\\d|\\.)1.3|(?<!\\d|\\.)2.3|(?<!\\d|\\.)3.1|(?<!\\d|\\.)3.2|(?<!\\d|\\.)3.3|(?<!\\d|\\.)6.1|(?<!\\d|\\.)3", perl=T), T, F),
          Rank_Review_Year = format(G_RANK_REVIEW_DATE, "%Y"),
          USESA = sub(x = USESA, pattern = "\\:.*", replacement = "")) %>%
   # select(ELEMENT_GLOBAL_ID, NAME_CATEGORY, INFORMAL_TAX, GNAME, G_PRIMARY_COMMON_NAME, RND, USESA, BLM_SSS_STATES, RANGE_EXTENT_DESC, RANGE_EXTENT_CD, Explorer.url, ExplorerPro.url) %>%
  rename(NatureServe_Element_ID = ELEMENT_GLOBAL_ID, Major_Group= NAME_CATEGORY, Higher_Level_Informal_Group = INFORMAL_GRP, Lower_Level_Informal_Group = INFORMAL_TAX, Scientific_Name = GNAME, NatureServe_Common_Name = G_PRIMARY_COMMON_NAME, Rounded_Global_Rank = RND, ESA_Status = USESA, BLM_SSS_States = BLM_SSS_STATES)
 
 ## Add data from BLM
-BLM.scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_20221205") %>%
+BLM.scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="BLM_scores_ESA_spp") %>%
   rename_with(~gsub(.x, pattern = " ", replacement = "_"))
 
 sss.data <- sss.data %>% 
-  left_join(y = subset(BLM.scores, select = c("NatureServe_Element_ID", "USFWS_Recovery_Priority_Num", "BLM_Practicability_Score", "BLM_Mutispecies_Score", "BLM_Partnering_Score", "Endemic", "HQ_Notes")) %>% rename(BLM_Range_Restricted = Endemic))
+  left_join(y = subset(BLM.scores, select = c("NatureServe_Element_ID", "USFWS_Recovery_Priority_Num", "BLM_Practicability_Score", "BLM_Multispecies_Score", "BLM_Partnering_Score", "Endemic", "HQ_Notes")) %>% rename(BLM_Range_Restricted = Endemic))
 
 ## Add results from jurisdictional analysis
 ja <- read_excel("C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Provided to BLM/BLM - Information for T & E Strategic Decision-Making - October 2022.xlsx", sheet = "BLM SSS Information by State", skip = 1) %>% 
-  mutate(Percent_EOs_BLM = as.numeric(`Occurrences on BLM Lands (West) / Total Occurrences Rangewide`),
-         Percent_Model_Area_BLM = `Percent Suitable Habitat on BLM Lands (West)`) %>%
+  mutate(Percent_EOs_BLM_2019 = as.numeric(`Occurrences on BLM Lands (West) / Total Occurrences Rangewide`)*100,
+         Percent_Model_Area_BLM = `Percent Suitable Habitat on BLM Lands (West)`*100) %>%
   rename("NatureServe_Element_ID" = "Element Global ID")
 
-sss.data <- sss.data %>% left_join(y=subset(ja, select = c("NatureServe_Element_ID", "Percent_EOs_BLM", "Percent_Model_Area_BLM")))
+sss.data <- sss.data %>% left_join(y=subset(ja, select = c("NatureServe_Element_ID", "Percent_EOs_BLM_2019", "Percent_Model_Area_BLM", "Total Occurrences Rangewide", "Total Occurrences on BLM Lands (West)")))
+
+##add more recent JA results
+ja2022<- read.csv("C:/Users/max_tarjan/OneDrive - NatureServe/Documents/Partners-In-Conservation/Output-2022-12-28/blm_eo_jurisdiction_results-2022-12-28.csv") %>% 
+  select(EGT_ID, eos_total, Percent_eo_BLM, Percent_eo_AB_BLM, eos_total, BLM) %>%
+  rename("NatureServe_Element_ID" = "EGT_ID",
+         "Percent_EOs_BLM_2022" = "Percent_eo_BLM",
+         "eos_total_2022" = "eos_total",
+         "eos_BLM" = "BLM")
+sss.data <- sss.data %>% left_join(ja2022)
+
+##plot JA results for 2022 versus 2019
+plot(data = subset(sss.data, `Total Occurrences on BLM Lands (West)`<50), eos_BLM ~ `Total Occurrences on BLM Lands (West)`)
 
 ##Subset data to the group that should appear in the applications (ESA listed)
 #sss.listed <- sss.data %>% filter(!is.na(`ESA Status`) & `ESA Status` != "DL: Delisted")
