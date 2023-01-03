@@ -48,7 +48,7 @@ user_base <- dplyr::tibble(
 #'
 #' # Load Data
 #' ## Initial scores
-latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2022-12-29") %>%
+latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-01-03") %>%
   data.frame(stringsAsFactors = TRUE) %>%
   dplyr::mutate(Notes = as.character(NA),
                 Higher_Level_Informal_Group = as.factor(Higher_Level_Informal_Group),
@@ -59,6 +59,51 @@ latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets
   rename_with(.fn = gsub,pattern = "_", replacement = " ") #%>% 
   #dplyr::select("Higher Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "ESA Status", "BLM SSS States", "USFWS Recovery Priority Num", "Evaluation", "Tier", "BLM Practicability Score", "BLM Multispecies Score", "BLM Partnering Score", "Notes")
 ## Replace scientific name with active natureserve explorer url
+
+## Code to make a larger text box for the notes field in the table. Source; https://github.com/rstudio/DT/issues/821
+# callback <- c(
+#   "table.on('focus', 'td.areaEdit input[type=text]', function(){",
+#   "  $(this).on('blur', function(e){",
+#   "    e.stopImmediatePropagation();",
+#   "    return false;",
+#   "  })",
+#   "});",
+#   "var id = $(table.table().node()).closest('.datatables').attr('id');",
+#   "$.contextMenu({",
+#   "  selector: '#' + id + ' td.areaEdit input[type=text]',",
+#   "  trigger: 'hover',",
+#   "  autoHide: true,",
+#   "  items: {",
+#   "    text: {",
+#   "      name: 'Edit:',",
+#   "      type: 'textarea',",
+#   "      value: ''",
+#   "    },",
+#   "    sep1: '---------',",
+#   "    cancel: {",
+#   "      name: 'Cancel',",
+#   "      icon: function($element, key, item){",
+#   "        return 'context-menu-icon context-menu-icon-quit';",
+#   "      },",
+#   "      callback: function(itemKey, opts, e){",
+#   "        this.trigger('change');",
+#   "      }",
+#   "    }",
+#   "  },",
+#   "  events: {",
+#   "    show: function(opts){",
+#   "      $.contextMenu.setInputValues(opts, {text: opts.$trigger.val()});",
+#   "    },",
+#   "    hide: function(opts){",
+#   "      var $this = this;",
+#   "      var data = $.contextMenu.getInputValues(opts, $this.data());",
+#   "      var $input = opts.$trigger;",
+#   "      $input.val(data.text);",
+#   "      $input.trigger('change');",
+#   "    }",
+#   "  }",
+#   "});"
+# )
 
 ### Shiny App
 shinyApp(
@@ -118,24 +163,28 @@ shinyApp(
                      
                      h3("Review and update priority scores"),
                      
-                     fluidRow(p("Instructions:"), style = "padding-left: 15px;"),
-                     fluidRow(p("1. Use the dropdown menu 'BLM affiliation' above to see scores for taxa in your state."), style = "padding-left: 15px;"),
-                     fluidRow(p("2. Use the filtering cells below the field names in the table below to filter the table."), style = "padding-left: 15px;"),
-                     fluidRow(p("3. Review BLM scores and resulting Tier assignments for relevant species. Double-click on any cell in the last 4 columns to edit its value - make sure you click outside the cell to save your entry before moving on to a different one"), style = "padding-left: 15px;"),
-                     fluidRow(p("4. Navigate to more pages of results using the menu at the bottom right of the table"), style = "padding-left: 15px;"),
-                     fluidRow(p("5. After editing scores, select species for which you have reviewed the BLM scores by clicking on the row. Note that additional edits to cell values will reset the selected rows. If you have reviewed all species in your state, use the 'Mark BLM scores for all species in your state as reviewed' toggle at the bottom of the page as a shortcut"), style = "padding-left: 15px;"),
-                     fluidRow(p("6. After you have clicked on every row for which you have reviewed the scores, click Submit!"), style = "padding-left: 15px;")
-                   ),
-                   
-                   fluidRow(
-                     fluidRow(p("**Refer to the decision tree and the Assessment field in the table to interpret the assigned Tier**"), style = "padding-left: 18px;"),
-                     actionButton(inputId = "view_tree", label = "View Prioritization Decision Tree", style = "secondary"),
-                     tags$style(
-                       type = 'text/css',
-                       '.modal-dialog { width: fit-content !important; }'
+                     column(width = 6,
+                            fluidRow(p("Instructions:"), style = "padding-left: 15px;"),
+                            fluidRow(p("1. Use the dropdown menu 'BLM affiliation' above to see scores for taxa in your state."), style = "padding-left: 15px;"),
+                            fluidRow(p("2. Use the filtering cells below the field names in the table below to filter the table."), style = "padding-left: 15px;"),
+                            fluidRow(p("3. Review BLM scores and resulting Tier assignments for relevant species. Double-click on any cell in the last 4 columns to edit its value - make sure you click outside the cell to save your entry before moving on to a different one"), style = "padding-left: 15px;"),
+                            fluidRow(p("4. Navigate to more pages of results using the menu at the bottom right of the table"), style = "padding-left: 15px;"),
+                            fluidRow(p("5. After editing scores, select species for which you have reviewed the BLM scores by clicking on the row. Note that additional edits to cell values will reset the selected rows. If you have reviewed all species in your state, use the 'Mark BLM scores for all species in your state as reviewed' toggle at the bottom of the page as a shortcut"), style = "padding-left: 15px;"),
+                            fluidRow(p("6. After you have clicked on every row for which you have reviewed the scores, click Submit!"), style = "padding-left: 15px;"),
+                            fluidRow(
+                              fluidRow(p("**Refer to the decision tree and the Assessment field in the table to interpret the assigned Tier**"), style = "padding-left: 18px;"),
+                              actionButton(inputId = "view_tree", label = "View Prioritization Decision Tree", style = "secondary"),
+                              tags$style(
+                                type = 'text/css',
+                                '.modal-dialog { width: fit-content !important; }'
+                              ),
+                              bsModal(id = "decisiontree", title = "Prioritization Decision Tree", trigger = "view_tree", img(src = "decision_tree.png"), size = "large")
+                     )),
+                     
+                     column(width = 6, align="center",
+                            plotOutput("distPlot"),
+                            fluidRow(p("Figure 1. Number of taxa in each Tier across all states based on prioritization criteria."), style = "padding-left: 18px;"))
                      ),
-                     bsModal(id = "decisiontree", title = "Prioritization Decision Tree", trigger = "view_tree", img(src = "decision_tree.png"), size = "large")
-                   ),
                    
                    # fluidRow(
                    #   h3("Update scores:")
@@ -200,6 +249,31 @@ shinyApp(
       
     })
     
+    output$distPlot <- renderPlot({
+      
+      ##plot results
+      results<-latest_scores
+      data.plot<-data.frame(table(results$Tier))
+      
+      ##get the label positions
+      data.plot <- data.plot %>%
+        mutate(Var1 = factor(Var1, levels = c("Tier 1", "Tier 2", "Tier 3", "Tier 4", "Data deficient"))) %>%
+        arrange(desc(Var1)) %>%
+        mutate(lab.ypos = cumsum(Freq) - 0.5*Freq) %>%
+        data.frame()
+      
+      fig <- ggplot(data.plot, aes(x = 2, y = Freq, fill = Var1)) +
+        geom_bar(stat = "identity", color = "white") +
+        coord_polar(theta = "y", start = 0)+
+        geom_text(aes(y = lab.ypos, label = Freq), color = "black", size=8)+
+        #scale_fill_brewer(palette = "Greens", name="", direction = -1) +
+        scale_fill_manual(values = c(rev(brewer.pal(4, "Greens")), "grey"), name="") +
+        theme_void() +
+        xlim(.9, 2.5) +
+        theme(text = element_text(size = 20), legend.position="right")
+      fig
+    })
+    
     # previousPage <- NULL ##previous page arguments now allow you to preseve the page when you edit a score, but it doesn't work with a filter (ends up removing the filter)
     
     # state_scores <- reactiveValues(values = latest_scores)
@@ -237,12 +311,17 @@ shinyApp(
       
       n.cols<-ncol(latest_scores_edits$values)
       
-      datatable(latest_scores_edits$values, 
-                options = list(dom = 'tp', pageLength = 10),# , displayStart = previousPage),
-                editable = list(target = "cell", disable = list(columns = c(1:(n.cols-4)))), 
+      datatable(latest_scores_edits$values,
+                editable = list(target = "cell", disable = list(columns = c(1:(n.cols-4)))),
+                # callback = JS(callback),
+                options = list(
+                  dom = 'tp', pageLength = 10#,
+                  # columnDefs = list(
+                  #   list(targets = n.cols, className = "areaEdit")
+                  # )
+                  ),# , displayStart = previousPage),
                 selection = list(mode = "multiple", target = "row"), 
-                filter = list(position = 'top', columns = 1:n.cols), escape = F) #%>%
-        # formatStyle(columns = c((n.cols-3):n.cols), backgroundColor = "lightyellow")
+                filter = list(position = 'top', columns = 1:n.cols), escape = F)
       
     })
     
@@ -273,13 +352,21 @@ shinyApp(
     observeEvent(input$select_button, {
       s <- as.numeric(strsplit(input$select_button, "_")[[1]][2])
       Eval$text <<- latest_scores$Evaluation[s]
-      output$scores <- renderTable(subset(latest_scores, select=c("Percent EOs BLM 2019", "Percent Model Area BLM", "Percent eo AB BLM", "USFWS Recovery Priority Num"))[s,] %>% rename("Percent of EOs on BLM-administered lands" = "Percent EOs BLM 2019", "Percent of modeled habitat on BLM-administered lands" = "Percent Model Area BLM", "Percent of EOs with rank A/B on BLM-administered lands" = "Percent eo AB BLM"))
+      output$scores <- renderTable(subset(latest_scores, select=c("Riparian", "Percent EOs BLM 2019", "Percent Model Area BLM", "Percent eo AB BLM", "USFWS Recovery Priority Num"))[s,] %>% rename("Percent of EOs on BLM-administered lands" = "Percent EOs BLM 2019", "Percent of modeled habitat on BLM-administered lands" = "Percent Model Area BLM", "Percent of EOs with rank A/B on BLM-administered lands" = "Percent eo AB BLM"))
       output$modal <- renderUI({
         tagList(
           bsModal(paste('model', s ,sep=''), "Assessment", "select_button", size = "small",
-                  p(renderText({Eval$text})),
-                  h5("Table 1. Additional input data for prioritization of this taxon. NA values indicate that no data were available for assessment."),
-                  tableOutput("scores")
+                  fluidRow(
+                    column(width = 6,
+                           p(renderText({Eval$text}))),
+                    column(width = 6, 
+                           h5("Table 1. Additional input data for prioritization of this taxon. NA values indicate that no data were available for assessment."),
+                           tableOutput("scores"))
+                  )
+                  
+                  # fluidRow(align = "center",
+                  #          h4("Prioritization Decision Tree"),
+                  #          img(src = "decision_tree.png"))
           ))
       })
       toggleModal(session,paste('model', s ,sep=''), toggle = "Assessment")

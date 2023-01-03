@@ -22,7 +22,7 @@ library(DT) ##for displaying and editing tables
 #sss$Percent_EOs_BLM<-as.numeric(sss$Percent_EOs_BLM)
 #sss$Percent_Model_Area_BLM<-as.numeric(sss$Percent_Model_Area_BLM)
 
-sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2022-12-09")
+sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-01-03")
 
 ##source code for prioritization function
 source('Prioritization-function.R', local = T)
@@ -85,7 +85,7 @@ ui <- fluidPage(
     
     ##about the app
     fluidRow(style = "padding-left: 50px; padding-top: 10px;",
-             h4("This application was developed by NatureServe for the Bureau of Land Management. It is intended to aid in the selection of prioritization criteria for SSS. The application uses selected inputs to assign tiers to 87 test species that were provided by BLM. Input data include practicality for conservation of the species, as scored by BLM staff (1 = low, 5 = high) and partnering opportunities presented by the species, as scored by BLM staff (1 = low, 5 = high). Species with Inventory Priority equal to True have a habitat model that experts reviewed as poor. Species that are a monitoring priority are those with an unknown short-term trend and a rank that was reviewed in the past 10 years."))
+             h4("This application was developed by NatureServe for the Bureau of Land Management. It is intended to aid in the selection of prioritization criteria for SSS. The application uses selected inputs to assign tiers to a list of Special Status Species that was provided by BLM. Input data include practicality for conservation of the species, as scored by BLM staff (1 = low, 5 = high) and partnering opportunities presented by the species, as scored by BLM staff (1 = low, 5 = high). Species with Inventory Priority equal to True have a habitat model that experts reviewed as poor. Species that are a monitoring priority are those with an unknown short-term trend and a rank that was reviewed in the past 10 years."))
     
 )
 
@@ -94,7 +94,7 @@ server <- function(input, output) {
   
   new_dat <- reactive({
     # generate results based on inputs from ui.R
-    results<-prioritize(data=sss, species = sss$Scientific_Name, threshold.eo = input$threshold.eo/100, threshold.model = input$threshold.model/100, threshold.practical = input$threshold.practical, threshold.partner = input$threshold.partner)
+    results<-prioritize(data=sss, species = sss$Scientific_Name, threshold.eo = input$threshold.eo, threshold.model = input$threshold.model, threshold.practical = input$threshold.practical, threshold.partner = input$threshold.partner)
     results
   })
     
