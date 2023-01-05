@@ -37,7 +37,7 @@ qry <- paste0("SELECT
  , informal_tax(egt.element_global_id) Informal_Tax
  , sn.SCIENTIFIC_NAME gname
  , egt.g_primary_common_name
- , egt.G_RANK grank
+ , egt.G_RANK Global_Rank
  , egt.ROUNDED_G_RANK rnd
  , egt.g_rank_review_date
  , d_usesa.display_value usesa
@@ -81,7 +81,7 @@ else '' end)    riverine_habitats
   ,(SELECT d_iucn_threat_category.display_value FROM d_iucn_threat_category, el_global_threats_assess 
        WHERE el_global_threats_assess.D_IUCN_THREAT_CATEGORY_ID = d_iucn_threat_category.D_IUCN_THREAT_CATEGORY_ID 
        and el_global_threats_assess.d_iucn_threat_category_id = 89 /*No Known threats */
-       and el_global_threats_assess.element_global_id =  egt.element_global_id )   as NO_KNOWN_THREATS
+       and el_global_threats_assess.element_global_id =  egt.element_global_id )   as No_Known_Threats
 
 , DelimList('SELECT DECODE(s.nation_id,139,''MX'','''')
     || s.subnation_code ||   ''''  AS subnatl_dist '
@@ -94,10 +94,10 @@ else '' end)    riverine_habitats
   AS BLM_SSS_states
 
 , DelimList('SELECT iucn_threat_category_desc FROM el_global_threats_assess, d_iucn_threat_category WHERE 
-        el_global_threats_assess.d_iucn_threat_category_id = d_iucn_threat_category.d_iucn_threat_category_id and el_global_threats_assess.element_global_id = '||egt.element_global_id || 'ORDER BY iucn_threat_category_desc', '; ') AS THREATS_DESC
+        el_global_threats_assess.d_iucn_threat_category_id = d_iucn_threat_category.d_iucn_threat_category_id and el_global_threats_assess.element_global_id = '||egt.element_global_id || 'ORDER BY iucn_threat_category_desc', '; ') AS Threats_Description
 
 , DelimList('SELECT iucn_threat_category_cd FROM el_global_threats_assess, d_iucn_threat_category WHERE 
-        el_global_threats_assess.d_iucn_threat_category_id = d_iucn_threat_category.d_iucn_threat_category_id and el_global_threats_assess.element_global_id = '||egt.element_global_id || 'ORDER BY iucn_threat_category_cd', '; ') AS THREATS
+        el_global_threats_assess.d_iucn_threat_category_id = d_iucn_threat_category.d_iucn_threat_category_id and el_global_threats_assess.element_global_id = '||egt.element_global_id || 'ORDER BY iucn_threat_category_cd', '; ') AS Threats_Codes
 
 FROM 
 ELEMENT_GLOBAL egt 
@@ -144,25 +144,26 @@ odbcClose(con)
 sss.data <- dat %>% 
   filter(!duplicated(ELEMENT_GLOBAL_ID)) %>%
   unique() %>%
-  mutate(Explorer.url = paste0("https://explorer.natureserve.org/Taxon/", EGUID, "/", sub(x=GNAME, pattern = " ", replacement = "_")),
-         ExplorerPro.url = paste0("https://explorer.natureserve.org/pro/Map/?taxonUniqueId=", EGUID),
+  mutate(Explorer_url = paste0("https://explorer.natureserve.org/Taxon/", EGUID, "/", sub(x=GNAME, pattern = " ", replacement = "_")),
+         ExplorerPro_url = paste0("https://explorer.natureserve.org/pro/Map/?taxonUniqueId=", EGUID),
          Riparian = ifelse((!is.na(RIVERINE_HABITATS) & !RIVERINE_HABITATS=="(?i)Aerial") | grepl(PALUSTRINE_HABITATS, pattern = "(?i)riparian"), T, F),
-         `Habitat_Wetland/riparian` =  ifelse((!is.na(RIVERINE_HABITATS) & RIVERINE_HABITATS!="(?i)Aerial") | !is.na(PALUSTRINE_HABITATS), T, F),
+         `Habitat_wetland/riparian` =  ifelse((!is.na(RIVERINE_HABITATS) & RIVERINE_HABITATS!="(?i)Aerial") | !is.na(PALUSTRINE_HABITATS), T, F),
          `Habitat_scrub/shrubland` = ifelse(grepl(TERRESTRIAL_HABITATS, pattern = "(?i)scrub|(?i)shrub|(?i)savanna"), T, F),
          `Habitat_grassland/steppe/prairie` = ifelse(grepl(TERRESTRIAL_HABITATS, pattern = "(?i)grassland|(?i)steppe|(?i)prairie|(?i)Old Field|(?i)barrens"), T, F),
          NS_Range_Restricted = ifelse(grepl(RANGE_EXTENT_CD, pattern = "A|B|C|D|E") & !grepl(RANGE_EXTENT_CD, pattern = "G|H"), T, F),
-         BLM_Threats = ifelse(grepl(strsplit(THREATS, split = "; "), pattern = "(?<!\\d|\\.)1.2|(?<!\\d|\\.)1.3|(?<!\\d|\\.)2.3|(?<!\\d|\\.)3.1|(?<!\\d|\\.)3.2|(?<!\\d|\\.)3.3|(?<!\\d|\\.)6.1|(?<!\\d|\\.)3", perl=T), T, F),
+         BLM_Threats = ifelse(grepl(strsplit(THREATS_CODES, split = "; "), pattern = "(?<!\\d|\\.)1.2|(?<!\\d|\\.)1.3|(?<!\\d|\\.)2.3|(?<!\\d|\\.)3.1|(?<!\\d|\\.)3.2|(?<!\\d|\\.)3.3|(?<!\\d|\\.)6.1|(?<!\\d|\\.)3", perl=T), T, F),
          Rank_Review_Year = format(G_RANK_REVIEW_DATE, "%Y"),
          USESA = sub(x = USESA, pattern = "\\:.*", replacement = "")) %>%
   # select(ELEMENT_GLOBAL_ID, NAME_CATEGORY, INFORMAL_TAX, GNAME, G_PRIMARY_COMMON_NAME, RND, USESA, BLM_SSS_STATES, RANGE_EXTENT_DESC, RANGE_EXTENT_CD, Explorer.url, ExplorerPro.url) %>%
- rename(NatureServe_Element_ID = ELEMENT_GLOBAL_ID, Major_Group= NAME_CATEGORY, Higher_Level_Informal_Group = INFORMAL_GRP, Lower_Level_Informal_Group = INFORMAL_TAX, Scientific_Name = GNAME, NatureServe_Common_Name = G_PRIMARY_COMMON_NAME, Rounded_Global_Rank = RND, ESA_Status = USESA, BLM_SSS_States = BLM_SSS_STATES)
+ rename(NatureServe_Element_ID = ELEMENT_GLOBAL_ID, Major_Group= NAME_CATEGORY, Higher_Level_Informal_Group = INFORMAL_GRP, Lower_Level_Informal_Group = INFORMAL_TAX, Scientific_Name = GNAME, NatureServe_Common_Name = G_PRIMARY_COMMON_NAME, Rounded_Global_Rank = RND, USESA_Status = USESA, BLM_SSS_States = BLM_SSS_STATES, `Short-Term_Trend`=S_TREND, Global_Rank = GLOBAL_RANK, No_Known_Threats = NO_KNOWN_THREATS, Threats_Description = THREATS_DESCRIPTION, Threats_Codes = THREATS_CODES)
 
 ## Add data from BLM
 BLM.scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="BLM_scores_ESA_spp") %>%
   rename_with(~gsub(.x, pattern = " ", replacement = "_"))
 
 sss.data <- sss.data %>% 
-  left_join(y = subset(BLM.scores, select = c("NatureServe_Element_ID", "USFWS_Recovery_Priority_Num", "BLM_Practicability_Score", "BLM_Multispecies_Score", "BLM_Partnering_Score", "Endemic", "HQ_Notes")) %>% rename(BLM_Range_Restricted = Endemic))
+  left_join(y = subset(BLM.scores, select = c("NatureServe_Element_ID", "USFWS_Recovery_Priority_Num", "BLM_Practicability_Score", "BLM_Multispecies_Score", "BLM_Partnering_Score", "Endemic", "HQ_Notes")) %>% rename(Range_Restricted_BLM_Score = Endemic, Practical_Cons_BLM_Score
+= BLM_Practicability_Score, `Multispecies_Benefit_BLM_Score` = BLM_Multispecies_Score, Partnering_Opps_BLM_Score = BLM_Partnering_Score))
 
 ## Add results from jurisdictional analysis
 ja <- read_excel("C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Provided to BLM/BLM - Information for T & E Strategic Decision-Making - October 2022.xlsx", sheet = "BLM SSS Information by State", skip = 1) %>% 
@@ -170,22 +171,27 @@ ja <- read_excel("C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions an
          Percent_Model_Area_BLM = `Percent Suitable Habitat on BLM Lands (West)`*100) %>%
   rename("NatureServe_Element_ID" = "Element Global ID")
 
-sss.data <- sss.data %>% left_join(y=subset(ja, select = c("NatureServe_Element_ID", "Percent_EOs_BLM_2019", "Percent_Model_Area_BLM", "Total Occurrences Rangewide", "Total Occurrences on BLM Lands (West)")))
+sss.data <- sss.data %>% left_join(y=subset(ja, select = c("NatureServe_Element_ID", "Percent_EOs_BLM_2019", "Percent_Model_Area_BLM", "Total Occurrences Rangewide", "Total Occurrences on BLM Lands (West)")) %>% rename(Total_EOs_Rangewide_2019 = `Total Occurrences Rangewide`, Total_EOs_BLM_2019 = `Total Occurrences on BLM Lands (West)`))
 
 ##add more recent JA results
 ja2022<- read.csv("C:/Users/max_tarjan/OneDrive - NatureServe/Documents/Partners-In-Conservation/Output-2022-12-28/blm_eo_jurisdiction_results-2022-12-28.csv") %>% 
   select(EGT_ID, eos_total, Percent_eo_BLM, Percent_eo_AB_BLM, eos_total, BLM) %>%
   rename("NatureServe_Element_ID" = "EGT_ID",
          "Percent_EOs_BLM_2022" = "Percent_eo_BLM",
-         "eos_total_2022" = "eos_total",
-         "eos_BLM" = "BLM")
+         "Total_EOs_Rangewide_2022" = "eos_total",
+         "Total_EOs_BLM_2022" = "BLM",
+         "Percent_AB_EOs_BLM" = "Percent_eo_AB_BLM")
 sss.data <- sss.data %>% left_join(ja2022)
 
 ##plot JA results for 2022 versus 2019
-plot(data = subset(sss.data, `Total Occurrences on BLM Lands (West)`<50), eos_BLM ~ `Total Occurrences on BLM Lands (West)`)
+plot(data = subset(sss.data, Total_EOs_BLM_2019<50), Total_EOs_BLM_2022 ~ Total_EOs_BLM_2019)
 
 ##Subset data to the group that should appear in the applications (ESA listed)
 #sss.listed <- sss.data %>% filter(!is.na(`ESA Status`) & `ESA Status` != "DL: Delisted")
+
+##Add model review score so can assess inventory priority
+mobimodels <- read_excel("C:/Users/max_tarjan/NatureServe/Map of Biodiversity Importance - Summary Tables/MoBI Modeling Summary by Species January 2021.xlsx", sheet = "MoBI_Model_Assessment", skip = 3) %>% mutate(NatureServe_Element_ID = ELEMENT_GLOBAL_ID...2, Average_Model_Review_Score = as.numeric(`Average Review Score`)) %>% select(NatureServe_Element_ID, Average_Model_Review_Score)
+sss.data <- sss.data %>% left_join(mobimodels)
 
 ##Write data to googlesheet
 sheet_write(data = sss.data, ss = "https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet = paste0("ESA_spp_", Sys.Date()))

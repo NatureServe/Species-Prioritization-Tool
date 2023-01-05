@@ -22,7 +22,7 @@ library(DT) ##for displaying and editing tables
 #sss$Percent_EOs_BLM<-as.numeric(sss$Percent_EOs_BLM)
 #sss$Percent_Model_Area_BLM<-as.numeric(sss$Percent_Model_Area_BLM)
 
-sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-01-03")
+sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-01-05")
 
 ##source code for prioritization function
 source('Prioritization-function.R', local = T)

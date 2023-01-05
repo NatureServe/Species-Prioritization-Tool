@@ -48,11 +48,11 @@ user_base <- dplyr::tibble(
 #'
 #' # Load Data
 #' ## Initial scores
-latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-01-03") %>%
+latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-01-05") %>%
   data.frame(stringsAsFactors = TRUE) %>%
   dplyr::mutate(Notes = as.character(NA),
                 Higher_Level_Informal_Group = as.factor(Higher_Level_Informal_Group),
-                Scientific_Name = paste0("<a href='", `Explorer.url`,"' target='_blank'>", Scientific_Name,"</a>"),
+                Scientific_Name = paste0("<a href='", `Explorer_url`,"' target='_blank'>", Scientific_Name,"</a>"),
                 Evaluation = paste(Evaluation, ifelse(is.na(HQ_Notes),"",paste0("Comments from BLM HQ: ", HQ_Notes))),
                 BLM_SSS_States = ifelse(is.na(BLM_SSS_States), "NA", BLM_SSS_States)) %>% 
   rename_with(.fn = gsub,pattern = "\\.", replacement = " ") %>%
@@ -285,7 +285,7 @@ shinyApp(
       inputs
     }
     
-    state_scores <- reactiveValues(values = cbind(subset(latest_scores, select=c("Higher Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "ESA Status", "BLM SSS States", "Tier")), Assessment = shinyInput(actionButton, nrow(latest_scores), 'button_', label = "Assessment", onclick = 'Shiny.onInputChange(\"select_button\",  this.id)' ), subset(latest_scores, select=c("BLM Practicability Score", "BLM Multispecies Score", "BLM Partnering Score", "Notes"))))
+    state_scores <- reactiveValues(values = cbind(subset(latest_scores, select=c("Higher Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "USESA Status", "BLM SSS States", "Tier")), Assessment = shinyInput(actionButton, nrow(latest_scores), 'button_', label = "Assessment", onclick = 'Shiny.onInputChange(\"select_button\",  this.id)' ), subset(latest_scores, select=c("Practical Cons BLM Score", "Multispecies Benefit BLM Score", "Partnering Opps BLM Score", "Notes"))))
     latest_scores_edits <- reactiveValues(values = latest_scores)
     
     observeEvent(
@@ -352,7 +352,7 @@ shinyApp(
     observeEvent(input$select_button, {
       s <- as.numeric(strsplit(input$select_button, "_")[[1]][2])
       Eval$text <<- latest_scores$Evaluation[s]
-      output$scores <- renderTable(subset(latest_scores, select=c("Riparian", "Percent EOs BLM 2019", "Percent Model Area BLM", "Percent eo AB BLM", "USFWS Recovery Priority Num"))[s,] %>% rename("Percent of EOs on BLM-administered lands" = "Percent EOs BLM 2019", "Percent of modeled habitat on BLM-administered lands" = "Percent Model Area BLM", "Percent of EOs with rank A/B on BLM-administered lands" = "Percent eo AB BLM"))
+      output$scores <- renderTable(subset(latest_scores, select=c("Riparian", "Percent EOs BLM 2019", "Percent Model Area BLM", "Percent AB EOs BLM", "USFWS Recovery Priority Num"))[s,] %>% rename("Percent of EOs on BLM-administered lands" = "Percent EOs BLM 2019", "Percent of modeled habitat on BLM-administered lands" = "Percent Model Area BLM", "Percent of EOs with rank A/B on BLM-administered lands" = "Percent AB EOs BLM"))
       output$modal <- renderUI({
         tagList(
           bsModal(paste('model', s ,sep=''), "Assessment", "select_button", size = "small",
@@ -401,7 +401,7 @@ shinyApp(
                         `Reviewer Affiliation` = input$selected_state,
                         `Scientific Name` = sub(pattern = ".*>(.+)</a>.*", x = `Scientific Name`, replacement = "\\1") #find text in between >link text</a>
           ) %>% 
-          dplyr::select(`Reviewer Name`, `Reviewer Email`, `Reviewer Affiliation`, `Scientific Name`, `NatureServe Common Name`, `Tier`, `BLM Practicability Score`,	`BLM Multispecies Score`,	`BLM Partnering Score`, `Notes`)
+          dplyr::select(`Reviewer Name`, `Reviewer Email`, `Reviewer Affiliation`, `Scientific Name`, `NatureServe Common Name`, `Tier`, `Practical Cons BLM Score`,	`Multispecies Benefit BLM Score`,	`Partnering Opps BLM Score`, `Notes`)
         
         sheet_append(ss = "https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", data = reviewed_scores, sheet = "suggested_scores")
         # session$reload()

@@ -5,7 +5,7 @@
 prioritize <- function (data, species, threshold.eo, threshold.model, threshold.practical, threshold.partner) {
   
   ## Check if all input parameters exist. If not, print an error
-  required.inputs<-c("Scientific_Name", "Percent_EOs_BLM_2019", "Percent_Model_Area_BLM", "ESA_Status", "Rounded_Global_Rank", "NO_KNOWN_THREATS", "BLM_Practicability_Score", "Habitat_Wetland/riparian", "Habitat_scrub/shrubland", "Habitat_grassland/steppe/prairie", "BLM_Multispecies_Score", "BLM_Partnering_Score", "S_TREND", "Rank_Review_Year", "NS_Range_Restricted", "BLM_Threats", "Riparian")
+  required.inputs<-c("Scientific_Name", "Percent_EOs_BLM_2019", "Percent_Model_Area_BLM", "USESA_Status", "Rounded_Global_Rank", "No_Known_Threats", "Practical_Cons_BLM_Score", "Habitat_wetland/riparian", "Habitat_grassland/steppe/prairie", "Multispecies_Benefit_BLM_Score", "Partnering_Opps_BLM_Score", "Short-Term_Trend", "Rank_Review_Year", "NS_Range_Restricted", "BLM_Threats", "Riparian", "Percent_AB_EOs_BLM", "Average_Model_Review_Score")
   missing.inputs<-required.inputs[which(!(required.inputs %in% names(data)))]
   if (length(missing.inputs)>0){
     stop(paste0("the following inputs are missing from the input dataset: ", paste0(missing.inputs, collapse = ", ")))
@@ -27,7 +27,7 @@ prioritize <- function (data, species, threshold.eo, threshold.model, threshold.
   ## Management responsibility: 
     ## Riparian: eos or modeled > 15% on blm land
     ## Not riparian: >30% EOs on BLM land, >30% Modeled habitat on BLM land OR 10% EOs and 50% A/B rank eos on blm land
-  results$Management.responsibility <- ifelse(results$Riparian,
+  results$A_Management_Responsibility <- ifelse(results$Riparian,
                                               ifelse(results$Percent_EOs_BLM_2019 > 15 & !is.na(results$Percent_EOs_BLM_2019), T, 
                                                      ifelse(results$Percent_Model_Area_BLM > 15 & !is.na(results$Percent_Model_Area_BLM), T, 
                                                             ifelse(is.na(results$Percent_EOs_BLM_2019) & is.na(results$Percent_Model_Area_BLM), NA, F)
@@ -35,58 +35,60 @@ prioritize <- function (data, species, threshold.eo, threshold.model, threshold.
                                                      ),
                                               ifelse(results$Percent_EOs_BLM_2019 > threshold.eo & !is.na(results$Percent_EOs_BLM_2019), T,
                                                      ifelse(results$Percent_Model_Area_BLM > threshold.model & !is.na(results$Percent_Model_Area_BLM), T,
-                                                            ifelse(results$Percent_EOs_BLM_2019 > 10 & results$Percent_eo_AB_BLM >= threshold.eo.ab & !is.na(results$Percent_EOs_BLM_2019) & !is.na(results$Percent_eo_AB_BLM), T, 
-                                                                   ifelse(is.na(results$Percent_EOs_BLM_2019) & is.na(results$Percent_Model_Area_BLM) & is.na(results$Percent_eo_AB_BLM), NA, F)
+                                                            ifelse(results$Percent_EOs_BLM_2019 > 10 & results$Percent_AB_EOs_BLM >= threshold.eo.ab & !is.na(results$Percent_EOs_BLM_2019) & !is.na(results$Percent_AB_EOs_BLM), T, 
+                                                                   ifelse(is.na(results$Percent_EOs_BLM_2019) & is.na(results$Percent_Model_Area_BLM) & is.na(results$Percent_AB_EOs_BLM), NA, F)
                                                                    )
                                                             )
                                                      )
                                               )
   
   ##Imperilment: Species is ESA listed, proposed, candidate' Species ranked G1, G2, T1, T2
-  results$Imperiled<-ifelse((!is.na(results$ESA_Status) & results$ESA_Status!="DL" & results$ESA_Status != 0) | (results$Rounded_Global_Rank %in% c("G1", "G2", "T1", "T2") & results$NO_KNOWN_THREATS == 0), T, F)
+  results$`B_Imperilment`<-ifelse((!is.na(results$USESA_Status) & results$USESA_Status!="DL" & results$USESA_Status != 0) | (results$Rounded_Global_Rank %in% c("G1", "G2", "T1", "T2") & results$No_Known_Threats == 0), T, F)
   
   ##Conservation Practicability: BLM Assessment derived from USFWS recovery priority numbers
-  results$Conservation.practicability <- ifelse(results$BLM_Practicability_Score > threshold.practical, T, F)
+  results$C_Practicability <- ifelse(results$Practical_Cons_BLM_Score > threshold.practical, T, F)
   
   ##Multispecies benefits: 6a. Species occurs in special habitats (wetland/riparian, scrub/shrubland, grassland/steppe/prairie); 6b. BLM Assessment
-  results$Multispecies <- ifelse(results$`Habitat_Wetland/riparian` | results$`Habitat_scrub/shrubland` | results$`Habitat_grassland/steppe/prairie` | replace_na(results$`BLM_Multispecies_Score`, 0) > 3, T, F)
+  results$Multispecies_Benefits_Special_Habitats <- ifelse(results$`Habitat_wetland/riparian` | results$`Habitat_grassland/steppe/prairie`, T, F)
+  results$Multispecies_Benefits_BLM_Score <- ifelse(replace_na(results$`Multispecies_Benefit_BLM_Score`, 0) > 3, T, F)
+  results$E_Multispecies_Benefits <- ifelse(results$Multispecies_Benefits_Special_Habitats | results$Multispecies_Benefits_BLM_Score, T, F)
   
   ##Partnering Opportunities: BLM Assessment
-  results$Partnering <- ifelse(results$BLM_Partnering_Score > threshold.partner, T, F)
+  results$F_Partnering_Ops <- ifelse(results$Partnering_Opps_BLM_Score > threshold.partner, T, F)
   
   ##Inventory priority: species has a habitat model that experts reviewed as poor
-  #results$Inventory.Priority <- ifelse(results$Ave_Model_Review_Score < 3, T, F)
+  results$A1_Inventory_Priority <- ifelse(results$Average_Model_Review_Score < 3, T, F)
   
   ##Monitoring Priority: Species has an unknown short-term trend and its rank was reviewed in the past 10 years
-  results$Monitoring.Priority <- ifelse(results$`S_TREND` == "U = Unknown" & results$Rank_Review_Year > (as.numeric(format(Sys.Date(), "%Y"))-10), T, F)
+  results$B1_Monitoring_Priority <- ifelse(results$A_Management_Responsibility & !results$B_Imperilment & results$`Short-Term_Trend` == "U = Unknown" & results$Rank_Review_Year > (as.numeric(format(Sys.Date(), "%Y"))-10), T, F)
   
   ##ASSIGN TO TIERS
-  results$Tier <- ifelse(is.na(results$Management.responsibility), "Data deficient",
-                               ifelse(results$Management.responsibility, no = "Tier 4", 
-                                      ifelse(results$Imperiled, no = "Tier 4",
-                                             ifelse(results$Conservation.practicability, no = "Tier 3",
+  results$Tier <- ifelse(is.na(results$`A_Management_Responsibility`), "Data deficient",
+                               ifelse(results$`A_Management_Responsibility`, no = "Tier 4", 
+                                      ifelse(results$`B_Imperilment`, no = "Tier 4",
+                                             ifelse(results$C_Practicability, no = "Tier 3",
                                                     ifelse(results$NS_Range_Restricted,
                                                            ifelse(results$BLM_Threats, "Tier 1", "Tier 2"),
-                                                           ifelse(results$Multispecies, no = "Tier 2",
-                                                                  ifelse(is.na(results$Partnering), "Tier 2", 
-                                                                         ifelse(results$Partnering,"Tier 1","Tier 2"))))))))
+                                                           ifelse(results$E_Multispecies_Benefits, no = "Tier 2",
+                                                                  ifelse(is.na(results$F_Partnering_Ops), "Tier 2", 
+                                                                         ifelse(results$F_Partnering_Ops,"Tier 1","Tier 2"))))))))
   ## Description of tier evaluation
   results$Evaluation<-NA
-  results$Evaluation <- ifelse(is.na(results$Management.responsibility), paste0("BLM's stewardship responsibility to the ", results$NatureServe_Common_Name," is unknown due to a lack of spatial data."),
-                               ifelse(results$Management.responsibility, no = paste0("The ", results$NatureServe_Common_Name," has low or no occurence on BLM-managed lands."), 
-                                      ifelse(results$Imperiled, no = paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is not imperiled."),
-                                             ifelse(results$Conservation.practicability, no = paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is imperiled (ESA listed, under review, or G1/G2). It would be difficult to implement conservation actions for this taxon."),
+  results$Evaluation <- ifelse(is.na(results$`A_Management_Responsibility`), paste0("BLM's stewardship responsibility to the ", results$NatureServe_Common_Name," is unknown due to a lack of available spatial data."),
+                               ifelse(results$`A_Management_Responsibility`, no = paste0("The ", results$NatureServe_Common_Name," has low or no occurence on BLM-managed lands."), 
+                                      ifelse(results$`B_Imperilment`, no = paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is not imperiled."),
+                                             ifelse(results$C_Practicability, no = paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is imperiled (ESA listed, under review, or G1/G2). Implementing conservation actions for this taxon would have low practicability."),
                                                     ifelse(results$NS_Range_Restricted,
                                                            ifelse(results$BLM_Threats, paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is imperiled (ESA listed, under review, or G1/G2). There is sufficient conservation practicability. It has a restricted range. It is affected by threats that BLM can mitigate."), paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is imperiled (ESA listed, under review, or G1/G2). There is sufficient conservation practicability. It has a restricted range. It is not affected by threats that BLM can mitigate.")),
-                                                           ifelse(results$Multispecies, no = paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is imperiled (ESA listed, under review, or G1/G2). There is sufficient conservation practicability. It has an unrestricted range. There are not sufficient multispecies benefits to its conservation."),
-                                                                  ifelse(is.na(results$Partnering), paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is imperiled (ESA listed, under review, or G1/G2). There is sufficient conservation practicability. It has an unrestricted range. There are multispecies benefits to its conservation. Partnering opportunities are unknown."),
-                                                                         ifelse(results$Partnering, paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is imperiled (ESA listed, under review, or G1/G2). There is sufficient conservation practicability. It has an unrestricted range. There are multispecies benefits to its conservation. There are partnering opportunities for its conservation."), paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is imperiled (ESA listed, under review, or G1/G2). There is sufficient conservation practicability. It has an unrestricted range. There are multispecies benefits to its conservation. There are insufficient partnering opportunities for its conservation.")))))))))
+                                                           ifelse(results$E_Multispecies_Benefits, no = paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is imperiled (ESA listed, under review, or G1/G2). There is sufficient conservation practicability. It does not have a restricted range. There are not sufficient multispecies benefits to its conservation."),
+                                                                  ifelse(is.na(results$F_Partnering_Ops), paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is imperiled (ESA listed, under review, or G1/G2). There is sufficient conservation practicability. It does not have a restricted range. There are multispecies benefits to its conservation. Partnering opportunities are unknown."),
+                                                                         ifelse(results$F_Partnering_Ops, paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is imperiled (ESA listed, under review, or G1/G2). There is sufficient conservation practicability. It does not have a restricted range. There are multispecies benefits to its conservation. There are partnering opportunities for its conservation."), paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is imperiled (ESA listed, under review, or G1/G2). There is sufficient conservation practicability. It does not have a restricted range. There are multispecies benefits to its conservation. There are limited partnering opportunities for its conservation.")))))))))
   
   ## Data deficient = data deficiency influences the tier
   ## Flagged if the lack of data brings the species into another Tier
-  results$Data.deficient <- ifelse(is.na(results$Management.responsibility) | is.na(results$Imperiled), T,
-                                   ifelse(results$Tier == "Tier 3" & is.na(results$Conservation.practicability), T,
-                                          ifelse(results$Tier == "Tier 2" & (is.na(results$Multispecies) | is.na(results$Partnering)), T, F
+  results$Data_Deficient <- ifelse(is.na(results$`A_Management_Responsibility`) | is.na(results$`B_Imperilment`), T,
+                                   ifelse(results$Tier == "Tier 3" & is.na(results$C_Practicability), T,
+                                          ifelse(results$Tier == "Tier 2" & (is.na(results$E_Multispecies_Benefits) | is.na(results$F_Partnering_Ops)), T, F
                                                  )
                                           )
                                    )

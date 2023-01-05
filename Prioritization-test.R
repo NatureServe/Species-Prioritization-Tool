@@ -9,7 +9,7 @@ library(openxlsx)
 
 #sss<-read_excel(path = "Data/Prioritization_Tool_11Aug2022.xlsx", sheet = "Data")
 #sss<-read_excel(path = "Data/NatureServe - Random Test Species - National Data_19 Oct 2022.xlsx", sheet= "Sheet1")
-sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-01-03")
+sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-01-05")
 sss$USFWS_Recovery_Priority_Num<-as.character(sss$USFWS_Recovery_Priority_Num)
 sss$USFWS_Recovery_Priority_Num[which(sss$USFWS_Recovery_Priority_Num == "NULL")] <- NA
 
@@ -35,8 +35,10 @@ for (j in 1:ncol(results_by_tier)) {
 }
 head(results_by_tier)
 
-metadata <- read.xlsx(xlsxFile = "C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Species Prioritization Tool/ESA Species/Prioritization-metadata.xlsx")
+metadata <- read.xlsx(xlsxFile = "C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Species Prioritization Tool/ESA Species/Prioritization-metadata.xlsx") %>% filter(!Name %in% c("Management_Responsibility_EOs", "Management_Responsibility_Models"))
 metadata$Description[which(metadata$Name == "Date")] <- format(Sys.Date(), "%m-%d-%Y")
+
+results_out <- results %>% select(subset(metadata, Type=="Field names")$Name)
 
 results_file_name <- paste0("C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Species Prioritization Tool/ESA Species/Prioritization-results-ESA-spp-", Sys.Date(), ".xlsx")
 wb <- openxlsx::createWorkbook()
@@ -47,7 +49,7 @@ insertImage(wb, "Ruleset", "shiny/SSS-Prioritization-Scores/www/decision_tree.pn
 addWorksheet(wb, "Results")
 writeData(wb, "Results", results_by_tier, headerStyle = createStyle(textDecoration = "Bold"))
 addWorksheet(wb, "Data")
-writeData(wb, "Data", results, headerStyle = createStyle(textDecoration = "Bold"))
+writeData(wb, "Data", results_out, headerStyle = createStyle(textDecoration = "Bold"))
 openxlsx::saveWorkbook(wb, results_file_name)
 
 
@@ -104,4 +106,4 @@ dev.off()
 #fig
 
 ##Show data completeness and outcomes for each prioritization step
-completeness <- subset(results, select = c(Management.responsibility, Imperiled, Conservation.practicability, Multispecies, Partnering)) %>% gather(key = "Criteria", value = "TF") %>% group_by(Criteria, TF) %>% summarise(n.spp = n()) %>% spread(key = "TF", value = "n.spp") %>% mutate(Percent.data.completeness = round((`FALSE`+`TRUE`)/nrow(results)*100, 1)) %>% subset(select = -`<NA>`) %>% rename("TRUE (No.Spp)" = `TRUE`, "FALSE (No.Spp)" = `FALSE`)
+completeness <- subset(results, select = c(`A_Management_Responsibility`, `B_Imperilment`, C_Practicability, E_Multispecies_Benefits, F_Partnering_Ops)) %>% gather(key = "Criteria", value = "TF") %>% group_by(Criteria, TF) %>% summarise(n.spp = n()) %>% spread(key = "TF", value = "n.spp") %>% mutate(Percent_data_completeness = round((`FALSE`+`TRUE`)/nrow(results)*100, 1)) %>% subset(select = -`<NA>`) %>% rename("TRUE (No.Spp)" = `TRUE`, "FALSE (No.Spp)" = `FALSE`)
