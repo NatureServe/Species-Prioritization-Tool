@@ -39,9 +39,9 @@ gs4_auth(path = "BLM-Scores/skilful-berm-368100-59d29742d3f1.json")
 #' ## Define database of authenticated users
 #' ## In this case, only one is needed
 user_base <- dplyr::tibble(
-  user = c("blm"), ## blm_user
-  # password = c("T@xon0m1c"),
-  password = c("123"), #simple pw for testing
+  user = c("blm_user"), ## blm_user
+  password = c("T@xon0m1c"),
+  # password = c("123"), #simple pw for testing
   permissions = c("admin"),
   name = c("BLM User")
 )
@@ -58,7 +58,7 @@ latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets
                 BLM_SSS_States = ifelse(is.na(BLM_SSS_States), "NA", BLM_SSS_States)) %>% 
   rename_with(.fn = gsub,pattern = "\\.", replacement = " ") %>%
   rename_with(.fn = gsub,pattern = "_", replacement = " ") #%>% 
-  #dplyr::select("Higher Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "ESA Status", "BLM SSS States", "USFWS Recovery Priority Num", "Evaluation", "Tier", "BLM Practicability Score", "BLM Multispecies Score", "BLM Partnering Score", "Notes")
+#dplyr::select("Higher Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "ESA Status", "BLM SSS States", "USFWS Recovery Priority Num", "Evaluation", "Tier", "BLM Practicability Score", "BLM Multispecies Score", "BLM Partnering Score", "Notes")
 ## Replace scientific name with active natureserve explorer url
 
 ## Code to make a larger text box for the notes field in the table. Source; https://github.com/rstudio/DT/issues/821
@@ -168,8 +168,8 @@ shinyApp(
                      fluidRow(p("1. Use the dropdown menu 'BLM affiliation' above to see scores for taxa in your state."), style = "padding-left: 15px;"),
                      fluidRow(p("2. Use the filtering cells below the field names in the table below to filter the table."), style = "padding-left: 15px;"),
                      fluidRow(p("3. Review BLM scores and resulting Tier assignments for relevant species. Double-click on any cell in the last 4 columns to edit its value - make sure you click outside the cell to save your entry before moving on to a different one"), style = "padding-left: 15px;"),
-                     fluidRow(p("4. Navigate to more pages of results using the menu at the bottom right of the table"), style = "padding-left: 15px;"),
-                     fluidRow(p("5. After editing scores, select species for which you have reviewed the BLM scores by clicking on the row. Note that additional edits to cell values will reset the selected rows. If you have reviewed all species in your state, use the 'Mark BLM scores for all species in your state as reviewed' toggle at the bottom of the page as a shortcut"), style = "padding-left: 15px;"),
+                     fluidRow(p("4. Select species for which you have reviewed the BLM scores by clicking on the row. If you have reviewed all species in your state, use the 'Mark BLM scores for all species in your state as reviewed' toggle at the bottom of the page as a shortcut"), style = "padding-left: 15px;"),
+                     fluidRow(p("5. Navigate to more pages of results using the menu at the bottom right of the table"), style = "padding-left: 15px;"),
                      fluidRow(p("6. After you have clicked on every row for which you have reviewed the scores, click Submit!"), style = "padding-left: 15px;"),
                      fluidRow(
                        fluidRow(p("**Refer to the decision tree and the Assessment field in the table to interpret the assigned Tier**"), style = "padding-left: 18px;"),
@@ -180,7 +180,7 @@ shinyApp(
                        ),
                        bsModal(id = "decisiontree", title = "Prioritization Decision Tree", trigger = "view_tree", img(src = "decision_tree.png"), size = "large")
                      )
-                     ),
+                   ),
                    
                    # fluidRow(
                    #   h3("Update scores:")
@@ -267,53 +267,45 @@ shinyApp(
         
         if (input$selected_state != ""){
           shinyjs::show("filtered_table_panel")
-          if (input$selected_state != ""){
-            latest_scores_edits$values <- state_scores$values %>%
-              dplyr::filter(grepl(x = `BLM SSS States`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|"))))
-          }
+          # if (input$selected_state != ""){
+          #   state_scores$values <- state_scores$values %>%
+          #     dplyr::filter(grepl(x = `BLM SSS States`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|"))))
+          # }
         }
         
       })
+    
+    observe({
+      latest_scores_edits$values <- state_scores$values %>% dplyr::filter(grepl(x = `BLM SSS States`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|"))))
+    })
     
     output$filtered_table <- renderDT({
       
       # Add this code if need to add Login module
       req(credentials()$user_auth)
       
-      n.cols<-ncol(latest_scores_edits$values)
+      n.cols <- ncol(state_scores$values %>% dplyr::filter(grepl(x = `BLM SSS States`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))))
       
-      datatable(latest_scores_edits$values,
+      datatable(state_scores$values %>% dplyr::filter(grepl(x = `BLM SSS States`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))),
                 editable = list(target = "cell", disable = list(columns = c(1:(n.cols-4)))),
                 # callback = JS(callback),
                 options = list(
-                  dom = 'tp', pageLength = 10#,
+                  dom = 'tp', pageLength = 10
                   # columnDefs = list(
                   #   list(targets = n.cols, className = "areaEdit")
-                  # )
-                  ),# , displayStart = previousPage),
+                  # ),
+                ),
                 selection = list(mode = "multiple", target = "row"), 
                 filter = list(position = 'top', columns = 1:n.cols), escape = F)
       
     })
     
     # Create proxy for filtered_table
-    filtered_table_proxy <- dataTableProxy("filtered_table")
+    filtered_table_proxy <- dataTableProxy("filtered_table") 
     
     observeEvent(input$filtered_table_cell_edit, {
       
-      latest_scores_edits$values <<- editData(latest_scores_edits$values, input$filtered_table_cell_edit, 'filtered_table')
-      
-      print(input$filtered_table_search_columns)
-      
-      if(input$filtered_table_search_columns[1] != '') {
-        filtered_table_proxy %>% updateSearch(keywords = list(global = isolate(input$filtered_table_search),
-                                                              columns = c("", isolate(input$filtered_table_search_columns)))
-        )
-      }
-      
-      print(input$filtered_table_search_columns)
-  
-      # previousPage <<- input$filtered_table_rows_current[1]-1
+      latest_scores_edits$values <<- editData(latest_scores_edits$values, input$filtered_table_cell_edit, filtered_table_proxy, resetPaging = FALSE)
       
     })
     
@@ -349,17 +341,17 @@ shinyApp(
       
       if (isTRUE(input$reviewed_all)){
         
-        dataTableProxy("filtered_table") %>% 
+        filtered_table_proxy %>% 
           selectRows(selected = 1:nrow(latest_scores_edits$values))
         
       }
       
       if (isFALSE(input$reviewed_all)){
         
-        dataTableProxy("filtered_table") %>% 
-         reloadData(clearSelection = "row")
-       
-     }
+        filtered_table_proxy %>% 
+          reloadData(clearSelection = "row")
+        
+      }
       
     })
     
@@ -374,7 +366,7 @@ shinyApp(
           ) %>% 
           dplyr::select(`Reviewer Name`, `Reviewer Email`, `Reviewer Affiliation`, `Scientific Name`, `NatureServe Common Name`, `Provisional Tier`, `Practical Cons BLM Score`,	`Multispecies Benefit BLM Score`,	`Partnering Opps BLM Score`, `Notes`)
         
-        sheet_write(ss = "https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", data = reviewed_scores, sheet = "suggested_scores")
+        sheet_append(ss = "https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", data = reviewed_scores, sheet = "suggested_scores")
         # session$reload()
         sendSweetAlert(session, type = "success", title = "Success!", text = paste0("We have received your scores for ", nrow(reviewed_scores), " species"), closeOnClickOutside = TRUE)
       } else {
