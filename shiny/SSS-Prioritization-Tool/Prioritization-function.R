@@ -57,7 +57,7 @@ prioritize <- function (data, species, threshold.eo, threshold.model, threshold.
   results$F_Partnering_Ops <- ifelse(results$Partnering_Opps_BLM_Score > threshold.partner, T, F)
   
   ##Inventory priority: species has a habitat model that experts reviewed as poor
-  results$A1_Inventory_Priority <- ifelse(results$Average_Model_Review_Score < 3, T, F)
+  results$A1_Inventory_Priority <- ifelse(!results$A_Management_Responsibility & results$Average_Model_Review_Score < 3, T, F)
   
   ##Monitoring Priority: Species has an unknown short-term trend and its rank was reviewed in the past 10 years
   results$B1_Monitoring_Priority <- ifelse(results$A_Management_Responsibility & !results$B_Imperilment & results$`Short-Term_Trend` == "U = Unknown" & results$Rank_Review_Year > (as.numeric(format(Sys.Date(), "%Y"))-10), T, F)
