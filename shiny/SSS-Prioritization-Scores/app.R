@@ -51,7 +51,8 @@ user_base <- dplyr::tibble(
 latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-01-05") %>%
   data.frame(stringsAsFactors = TRUE) %>%
   dplyr::mutate(Notes = as.character(NA),
-                Higher_Level_Informal_Group = as.factor(Higher_Level_Informal_Group),
+                Provisional_Tier = Tier,
+                Lower_Level_Informal_Group = as.factor(Lower_Level_Informal_Group),
                 Scientific_Name = paste0("<a href='", `Explorer_url`,"' target='_blank'>", Scientific_Name,"</a>"),
                 Evaluation = paste(Evaluation, ifelse(is.na(HQ_Notes),"",paste0("Comments from BLM HQ: ", HQ_Notes))),
                 BLM_SSS_States = ifelse(is.na(BLM_SSS_States), "NA", BLM_SSS_States)) %>% 
@@ -163,27 +164,22 @@ shinyApp(
                      
                      h3("Review and update priority scores"),
                      
-                     column(width = 6,
-                            fluidRow(p("Instructions:"), style = "padding-left: 15px;"),
-                            fluidRow(p("1. Use the dropdown menu 'BLM affiliation' above to see scores for taxa in your state."), style = "padding-left: 15px;"),
-                            fluidRow(p("2. Use the filtering cells below the field names in the table below to filter the table."), style = "padding-left: 15px;"),
-                            fluidRow(p("3. Review BLM scores and resulting Tier assignments for relevant species. Double-click on any cell in the last 4 columns to edit its value - make sure you click outside the cell to save your entry before moving on to a different one"), style = "padding-left: 15px;"),
-                            fluidRow(p("4. Navigate to more pages of results using the menu at the bottom right of the table"), style = "padding-left: 15px;"),
-                            fluidRow(p("5. After editing scores, select species for which you have reviewed the BLM scores by clicking on the row. Note that additional edits to cell values will reset the selected rows. If you have reviewed all species in your state, use the 'Mark BLM scores for all species in your state as reviewed' toggle at the bottom of the page as a shortcut"), style = "padding-left: 15px;"),
-                            fluidRow(p("6. After you have clicked on every row for which you have reviewed the scores, click Submit!"), style = "padding-left: 15px;"),
-                            fluidRow(
-                              fluidRow(p("**Refer to the decision tree and the Assessment field in the table to interpret the assigned Tier**"), style = "padding-left: 18px;"),
-                              actionButton(inputId = "view_tree", label = "View Prioritization Decision Tree", style = "secondary"),
-                              tags$style(
-                                type = 'text/css',
-                                '.modal-dialog { width: fit-content !important; }'
-                              ),
-                              bsModal(id = "decisiontree", title = "Prioritization Decision Tree", trigger = "view_tree", img(src = "decision_tree.png"), size = "large")
-                     )),
-                     
-                     column(width = 6, align="center",
-                            plotOutput("distPlot"),
-                            fluidRow(p("Figure 1. Number of taxa in each Tier across all states based on prioritization criteria."), style = "padding-left: 18px;"))
+                     fluidRow(p("Instructions:"), style = "padding-left: 15px;"),
+                     fluidRow(p("1. Use the dropdown menu 'BLM affiliation' above to see scores for taxa in your state."), style = "padding-left: 15px;"),
+                     fluidRow(p("2. Use the filtering cells below the field names in the table below to filter the table."), style = "padding-left: 15px;"),
+                     fluidRow(p("3. Review BLM scores and resulting Tier assignments for relevant species. Double-click on any cell in the last 4 columns to edit its value - make sure you click outside the cell to save your entry before moving on to a different one"), style = "padding-left: 15px;"),
+                     fluidRow(p("4. Navigate to more pages of results using the menu at the bottom right of the table"), style = "padding-left: 15px;"),
+                     fluidRow(p("5. After editing scores, select species for which you have reviewed the BLM scores by clicking on the row. Note that additional edits to cell values will reset the selected rows. If you have reviewed all species in your state, use the 'Mark BLM scores for all species in your state as reviewed' toggle at the bottom of the page as a shortcut"), style = "padding-left: 15px;"),
+                     fluidRow(p("6. After you have clicked on every row for which you have reviewed the scores, click Submit!"), style = "padding-left: 15px;"),
+                     fluidRow(
+                       fluidRow(p("**Refer to the decision tree and the Assessment field in the table to interpret the assigned Tier**"), style = "padding-left: 18px;"),
+                       actionButton(inputId = "view_tree", label = "View Prioritization Decision Tree", style = "secondary"),
+                       tags$style(
+                         type = 'text/css',
+                         '.modal-dialog { width: fit-content !important; }'
+                       ),
+                       bsModal(id = "decisiontree", title = "Prioritization Decision Tree", trigger = "view_tree", img(src = "decision_tree.png"), size = "large")
+                     )
                      ),
                    
                    # fluidRow(
@@ -249,31 +245,6 @@ shinyApp(
       
     })
     
-    output$distPlot <- renderPlot({
-      
-      ##plot results
-      results<-latest_scores
-      data.plot<-data.frame(table(results$Tier))
-      
-      ##get the label positions
-      data.plot <- data.plot %>%
-        mutate(Var1 = factor(Var1, levels = c("Tier 1", "Tier 2", "Tier 3", "Tier 4", "Data deficient"))) %>%
-        arrange(desc(Var1)) %>%
-        mutate(lab.ypos = cumsum(Freq) - 0.5*Freq) %>%
-        data.frame()
-      
-      fig <- ggplot(data.plot, aes(x = 2, y = Freq, fill = Var1)) +
-        geom_bar(stat = "identity", color = "white") +
-        coord_polar(theta = "y", start = 0)+
-        geom_text(aes(y = lab.ypos, label = Freq), color = "black", size=8)+
-        #scale_fill_brewer(palette = "Greens", name="", direction = -1) +
-        scale_fill_manual(values = c(rev(brewer.pal(4, "Greens")), "grey"), name="") +
-        theme_void() +
-        xlim(.9, 2.5) +
-        theme(text = element_text(size = 20), legend.position="right")
-      fig
-    })
-    
     # previousPage <- NULL ##previous page arguments now allow you to preseve the page when you edit a score, but it doesn't work with a filter (ends up removing the filter)
     
     # state_scores <- reactiveValues(values = latest_scores)
@@ -285,7 +256,7 @@ shinyApp(
       inputs
     }
     
-    state_scores <- reactiveValues(values = cbind(subset(latest_scores, select=c("Higher Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "USESA Status", "BLM SSS States", "Tier")), Assessment = shinyInput(actionButton, nrow(latest_scores), 'button_', label = "Assessment", onclick = 'Shiny.onInputChange(\"select_button\",  this.id)' ), subset(latest_scores, select=c("Practical Cons BLM Score", "Multispecies Benefit BLM Score", "Partnering Opps BLM Score", "Notes"))))
+    state_scores <- reactiveValues(values = cbind(subset(latest_scores, select=c("Lower Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "USESA Status", "BLM SSS States", "Provisional Tier")), `Provisional Assessment` = shinyInput(actionButton, nrow(latest_scores), 'button_', label = "Assessment", onclick = 'Shiny.onInputChange(\"select_button\",  this.id)' ), subset(latest_scores, select=c("Practical Cons BLM Score", "Multispecies Benefit BLM Score", "Partnering Opps BLM Score", "Notes"))))
     latest_scores_edits <- reactiveValues(values = latest_scores)
     
     observeEvent(
@@ -355,7 +326,7 @@ shinyApp(
       output$scores <- renderTable(subset(latest_scores, select=c("Riparian", "Percent EOs BLM 2019", "Percent Model Area BLM", "Percent AB EOs BLM", "USFWS Recovery Priority Num"))[s,] %>% rename("Percent of EOs on BLM-administered lands" = "Percent EOs BLM 2019", "Percent of modeled habitat on BLM-administered lands" = "Percent Model Area BLM", "Percent of EOs with rank A/B on BLM-administered lands" = "Percent AB EOs BLM"))
       output$modal <- renderUI({
         tagList(
-          bsModal(paste('model', s ,sep=''), "Assessment", "select_button", size = "small",
+          bsModal(paste('model', s ,sep=''), "Provisional Assessment", "select_button", size = "small",
                   fluidRow(
                     column(width = 6,
                            p(renderText({Eval$text}))),
@@ -401,9 +372,9 @@ shinyApp(
                         `Reviewer Affiliation` = input$selected_state,
                         `Scientific Name` = sub(pattern = ".*>(.+)</a>.*", x = `Scientific Name`, replacement = "\\1") #find text in between >link text</a>
           ) %>% 
-          dplyr::select(`Reviewer Name`, `Reviewer Email`, `Reviewer Affiliation`, `Scientific Name`, `NatureServe Common Name`, `Tier`, `Practical Cons BLM Score`,	`Multispecies Benefit BLM Score`,	`Partnering Opps BLM Score`, `Notes`)
+          dplyr::select(`Reviewer Name`, `Reviewer Email`, `Reviewer Affiliation`, `Scientific Name`, `NatureServe Common Name`, `Provisional Tier`, `Practical Cons BLM Score`,	`Multispecies Benefit BLM Score`,	`Partnering Opps BLM Score`, `Notes`)
         
-        sheet_append(ss = "https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", data = reviewed_scores, sheet = "suggested_scores")
+        sheet_write(ss = "https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", data = reviewed_scores, sheet = "suggested_scores")
         # session$reload()
         sendSweetAlert(session, type = "success", title = "Success!", text = paste0("We have received your scores for ", nrow(reviewed_scores), " species"), closeOnClickOutside = TRUE)
       } else {

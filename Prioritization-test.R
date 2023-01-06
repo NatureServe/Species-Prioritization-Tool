@@ -40,7 +40,7 @@ metadata$Description[which(metadata$Name == "Date")] <- format(Sys.Date(), "%m-%
 
 results_out <- results %>% select(subset(metadata, Type=="Field names")$Name)
 
-results_file_name <- paste0("C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Species Prioritization Tool/ESA Species/Prioritization-results-ESA-spp-", Sys.Date(), ".xlsx")
+results_file_name <- paste0("C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Species Prioritization Tool/ESA Species/NatureServe - ESA Species - Prioritization Results-", Sys.Date(), ".xlsx")
 wb <- openxlsx::createWorkbook()
 addWorksheet(wb, "Metadata")
 writeData(wb, "Metadata", metadata, headerStyle = createStyle(textDecoration = "Bold"))
