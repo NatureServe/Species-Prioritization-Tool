@@ -13,12 +13,12 @@ library(shinyWidgets)
 library(shinyauthr)
 library(shinyjs)
 
-# .rs.files.restoreBindings() ##run this to publish app
+.rs.files.restoreBindings() ##run this to publish app
 
 #'
 #' Google oauth authentication
-drive_auth(path = "BLM-Scores/skilful-berm-368100-59d29742d3f1.json")
-gs4_auth(path = "BLM-Scores/skilful-berm-368100-59d29742d3f1.json")
+drive_auth(path = "skilful-berm-368100-59d29742d3f1.json")
+gs4_auth(path = "skilful-berm-368100-59d29742d3f1.json")
 
 #' Alternative authentication (subject to 2 factor)
 #' #' ## designate project-specific cache
