@@ -13,7 +13,7 @@ library(shinyWidgets)
 library(shinyauthr)
 library(shinyjs)
 
-.rs.files.restoreBindings() ##run this to publish app
+#.rs.files.restoreBindings() ##run this before publishing, then comment out to publish
 
 #'
 #' Google oauth authentication
@@ -48,7 +48,7 @@ user_base <- dplyr::tibble(
 #'
 #' # Load Data
 #' ## Initial scores
-latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-01-05") %>%
+latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-01-20") %>%
   data.frame(stringsAsFactors = TRUE) %>%
   dplyr::mutate(Notes = as.character(NA),
                 Provisional_Tier = Tier,
