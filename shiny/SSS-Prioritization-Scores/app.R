@@ -48,18 +48,25 @@ user_base <- dplyr::tibble(
 #'
 #' # Load Data
 #' ## Initial scores
-latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-01-20") %>%
+latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-02-02") %>%
   data.frame(stringsAsFactors = TRUE) %>%
   dplyr::mutate(Notes = as.character(NA),
                 Provisional_Tier = Tier,
                 Lower_Level_Informal_Group = as.factor(Lower_Level_Informal_Group),
-                Scientific_Name = paste0("<a href='", `Explorer_url`,"' target='_blank'>", Scientific_Name,"</a>"),
                 Evaluation = paste(Evaluation, ifelse(is.na(HQ_Notes),"",paste0("Comments from BLM HQ: ", HQ_Notes))),
                 BLM_SSS_States = ifelse(is.na(BLM_SSS_States), "NA", BLM_SSS_States)) %>% 
   rename_with(.fn = gsub,pattern = "\\.", replacement = " ") %>%
   rename_with(.fn = gsub,pattern = "_", replacement = " ") #%>% 
 #dplyr::select("Higher Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "ESA Status", "BLM SSS States", "USFWS Recovery Priority Num", "Evaluation", "Tier", "BLM Practicability Score", "BLM Multispecies Score", "BLM Partnering Score", "Notes")
 ## Replace scientific name with active natureserve explorer url
+
+## Suggested scores by BLM staff
+suggested_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="suggested_scores") %>% unique() %>%
+  data.frame(stringsAsFactors = TRUE) %>% rename_with(.fn = gsub,pattern = "\\.", replacement = " ") %>% mutate(Reviewers = paste0(`Reviewer Name`, " (", `Reviewer Affiliation`, ")")) %>% group_by(`Scientific Name`) %>% summarise(Reviewers = paste(Reviewers, collapse = ", "), Reviews = paste(Notes, collapse = "; "))
+
+latest_scores <- left_join(latest_scores, suggested_scores) %>% 
+  mutate(`Scientific Name` = paste0("<a href='", `Explorer url`,"' target='_blank'>", `Scientific Name`,"</a>"),
+         Reviewers = ifelse(is.na(Reviewers), "None", Reviewers))
 
 ## Code to make a larger text box for the notes field in the table. Source; https://github.com/rstudio/DT/issues/821
 # callback <- c(
@@ -310,21 +317,25 @@ shinyApp(
     })
     
     Eval <- reactiveValues(text = '')
-    # supplement <- reactiveValues()
     
     observeEvent(input$select_button, {
       s <- as.numeric(strsplit(input$select_button, "_")[[1]][2])
       Eval$text <<- latest_scores$Evaluation[s]
+      output$reviews <- renderTable(subset(latest_scores, select = c("Reviewers", "Reviews"))[s,])
       output$scores <- renderTable(subset(latest_scores, select=c("Riparian", "Percent EOs BLM 2019", "Percent Model Area BLM", "Percent AB EOs BLM", "USFWS Recovery Priority Num"))[s,] %>% rename("Percent of EOs on BLM-administered lands" = "Percent EOs BLM 2019", "Percent of modeled habitat on BLM-administered lands" = "Percent Model Area BLM", "Percent of EOs with rank A/B on BLM-administered lands" = "Percent AB EOs BLM"))
       output$modal <- renderUI({
         tagList(
           bsModal(paste('model', s ,sep=''), "Provisional Assessment", "select_button", size = "small",
                   fluidRow(
                     column(width = 6,
-                           p(renderText({Eval$text}))),
+                           p(renderText({Eval$text})),
+                           h5("Table 1. Review history. Notes made by BLM staff during reviews of provisional scores and tiers."),
+                           tableOutput("reviews")
+                           ),
                     column(width = 6, 
-                           h5("Table 1. Additional input data for prioritization of this taxon. NA values indicate that no data were available for assessment."),
-                           tableOutput("scores"))
+                           h5("Table 2. Additional input data for prioritization of this taxon. NA values indicate that no data were available for assessment."),
+                           tableOutput("scores")
+                           )
                   )
                   
                   # fluidRow(align = "center",

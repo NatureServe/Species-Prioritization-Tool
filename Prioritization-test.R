@@ -9,7 +9,7 @@ library(openxlsx)
 
 #sss<-read_excel(path = "Data/Prioritization_Tool_11Aug2022.xlsx", sheet = "Data")
 #sss<-read_excel(path = "Data/NatureServe - Random Test Species - National Data_19 Oct 2022.xlsx", sheet= "Sheet1")
-sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-01-20")
+sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-02-02")
 sss$USFWS_Recovery_Priority_Num<-as.character(sss$USFWS_Recovery_Priority_Num)
 sss$USFWS_Recovery_Priority_Num[which(sss$USFWS_Recovery_Priority_Num == "NULL")] <- NA
 
@@ -48,6 +48,8 @@ addWorksheet(wb, "Ruleset")
 insertImage(wb, "Ruleset", "shiny/SSS-Prioritization-Scores/www/decision_tree.png", width = 6, height = 8)
 addWorksheet(wb, "Results")
 writeData(wb, "Results", results_by_tier, headerStyle = createStyle(textDecoration = "Bold"))
+addWorksheet(wb, "Data Abbreviated")
+writeData(wb, "Data Abbreviated", results_out %>% select(Tier, Lower_Level_Informal_Group, Scientific_Name, NatureServe_Common_Name, States_of_Occurrence, A_Management_Responsibility, B_Imperilment, C_Practicability, NS_Range_Restricted, E_Multispecies_Benefits, F_Partnering_Ops), headerStyle = createStyle(textDecoration = "Bold"))
 addWorksheet(wb, "Data")
 writeData(wb, "Data", results_out, headerStyle = createStyle(textDecoration = "Bold"))
 openxlsx::saveWorkbook(wb, results_file_name)
@@ -107,3 +109,10 @@ dev.off()
 
 ##Show data completeness and outcomes for each prioritization step
 completeness <- subset(results, select = c(`A_Management_Responsibility`, `B_Imperilment`, C_Practicability, E_Multispecies_Benefits, F_Partnering_Ops)) %>% gather(key = "Criteria", value = "TF") %>% group_by(Criteria, TF) %>% summarise(n.spp = n()) %>% spread(key = "TF", value = "n.spp") %>% mutate(Percent_data_completeness = round((`FALSE`+`TRUE`)/nrow(results)*100, 1)) %>% subset(select = -`<NA>`) %>% rename("TRUE (No.Spp)" = `TRUE`, "FALSE (No.Spp)" = `FALSE`)
+
+## Identify species that changed tier due to updates from suggested scores
+old.results <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-01-05") %>% rename(old.Tier = Tier)
+
+tier.compare <- subset(results, select=c(NatureServe_Common_Name, Tier, BLM_Scores_Reviewed)) %>% left_join(subset(old.results, select =c(NatureServe_Common_Name, old.Tier)))
+
+tier.compare %>% filter(Tier != old.Tier) %>% data.frame()
