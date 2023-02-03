@@ -106,6 +106,7 @@ else '' end)    riverine_habitats
     || s.subnation_code ||   ''''  AS subnatl_dist '
     || ' FROM element_subnational, subnation s
          WHERE element_subnational.subnation_id = s.subnation_id
+         and s.nation_id = 225
          and element_subnational.element_national_id IN ' 
     || '(SELECT element_national_id FROM element_national WHERE element_global_id='  
     || egt.element_global_id || ') ORDER BY s.nation_id desc, SUBNATL_DIST ', ', ') 

@@ -51,8 +51,9 @@ user_base <- dplyr::tibble(
 latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-02-02") %>%
   data.frame(stringsAsFactors = TRUE) %>%
   dplyr::mutate(Notes = as.character(NA),
-                Provisional_Tier = Tier,
-                Lower_Level_Informal_Group = as.factor(Lower_Level_Informal_Group),
+                Provisional_Tier = as.factor(Tier),
+                Group = as.factor(Lower_Level_Informal_Group),
+                Global_Rank = as.factor(Rounded_Global_Rank),
                 Evaluation = paste(Evaluation, ifelse(is.na(HQ_Notes),"",paste0("Comments from BLM HQ: ", HQ_Notes))),
                 BLM_SSS_States = ifelse(is.na(BLM_SSS_States), "NA", BLM_SSS_States)) %>% 
   rename_with(.fn = gsub,pattern = "\\.", replacement = " ") %>%
@@ -263,7 +264,7 @@ shinyApp(
       inputs
     }
     
-    state_scores <- reactiveValues(values = cbind(subset(latest_scores, select=c("Lower Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "USESA Status", "BLM SSS States", "Provisional Tier")), `Provisional Assessment` = shinyInput(actionButton, nrow(latest_scores), 'button_', label = "Assessment", onclick = 'Shiny.onInputChange(\"select_button\",  this.id)' ), subset(latest_scores, select=c("Practical Cons BLM Score", "Multispecies Benefit BLM Score", "Partnering Opps BLM Score", "Notes"))))
+    state_scores <- reactiveValues(values = cbind(subset(latest_scores, select=c("Group", "Scientific Name", "NatureServe Common Name", "Global Rank", "USESA Status", "BLM SSS States", "States of Occurrence", "Provisional Tier")), `Provisional Assessment` = shinyInput(actionButton, nrow(latest_scores), 'button_', label = "Assessment", onclick = 'Shiny.onInputChange(\"select_button\",  this.id)' ), subset(latest_scores, select=c("Practical Cons BLM Score", "Multispecies Benefit BLM Score", "Partnering Opps BLM Score", "Notes"))))
     latest_scores_edits <- reactiveValues(values = latest_scores)
     
     observeEvent(
