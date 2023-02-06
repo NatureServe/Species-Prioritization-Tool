@@ -371,12 +371,12 @@ shinyApp(
       
       if (input$email != "" & length(input$filtered_table_rows_selected)>0){
         reviewed_scores <- latest_scores_edits$values[input$filtered_table_rows_selected, ] %>% 
-          dplyr::mutate(`Reviewer Name` = paste(input$first_name, input$last_name, sep = " "),
+          dplyr::mutate(Date = Sys.Date(), `Reviewer Name` = paste(input$first_name, input$last_name, sep = " "),
                         `Reviewer Email` = input$email,
                         `Reviewer Affiliation` = input$selected_state,
                         `Scientific Name` = sub(pattern = ".*>(.+)</a>.*", x = `Scientific Name`, replacement = "\\1") #find text in between >link text</a>
           ) %>% 
-          dplyr::select(`Reviewer Name`, `Reviewer Email`, `Reviewer Affiliation`, `Scientific Name`, `NatureServe Common Name`, `Provisional Tier`, `Practical Cons BLM Score`,	`Multispecies Benefit BLM Score`,	`Partnering Opps BLM Score`, `Notes`)
+          dplyr::select(Date, `Reviewer Name`, `Reviewer Email`, `Reviewer Affiliation`, `Scientific Name`, `NatureServe Common Name`, `Provisional Tier`, `Practical Cons BLM Score`,	`Multispecies Benefit BLM Score`,	`Partnering Opps BLM Score`, `Notes`)
         
         sheet_append(ss = "https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", data = reviewed_scores, sheet = "suggested_scores")
         # session$reload()
