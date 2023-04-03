@@ -277,14 +277,14 @@ shinyApp(
           shinyjs::show("filtered_table_panel")
           # if (input$selected_state != ""){
           #   state_scores$values <- state_scores$values %>%
-          #     dplyr::filter(grepl(x = `BLM SSS States`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|"))))
+          #     dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|"))))
           # }
         }
         
       })
     
     observe({
-      latest_scores_edits$values <- state_scores$values %>% dplyr::filter(grepl(x = `BLM SSS States`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|"))))
+      latest_scores_edits$values <- state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|"))))
     })
     
     output$filtered_table <- renderDT({
@@ -292,9 +292,9 @@ shinyApp(
       # Add this code if need to add Login module
       req(credentials()$user_auth)
       
-      n.cols <- ncol(state_scores$values %>% dplyr::filter(grepl(x = `BLM SSS States`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))))
+      n.cols <- ncol(state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))))
       
-      datatable(state_scores$values %>% dplyr::filter(grepl(x = `BLM SSS States`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))),
+      datatable(state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))),
                 editable = list(target = "cell", disable = list(columns = c(1:(n.cols-4)))),
                 # callback = JS(callback),
                 options = list(
