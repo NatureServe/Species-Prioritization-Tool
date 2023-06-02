@@ -1,0 +1,26 @@
+{
+    "id": "24EB0099",
+    "path": "G:/Dropbox/natureserve/apps/Species-Prioritization-Tool/Species-Prioritization-Tool/shiny/SSS-Prioritization-Scores/app.R",
+    "project_path": "shiny/SSS-Prioritization-Scores/app.R",
+    "type": "r_source",
+    "hash": "3951687672",
+    "contents": "",
+    "dirty": false,
+    "created": 1683738443198.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "281,178",
+        "scrollLine": "261"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1685748769,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1685748769599,
+    "read_only": false,
+    "read_only_alternatives": []
+}
