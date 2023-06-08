@@ -55,8 +55,8 @@ latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets
                 Provisional_Tier = as.factor(Tier),
                 Group = as.factor(Lower_Level_Informal_Group),
                 Global_Rank = as.factor(Rounded_Global_Rank),
-                BLM_SSS_States = ifelse(is.na(BLM_SSS_States), "NA", BLM_SSS_States),
-                Evaluation = paste(Evaluation, ifelse(is.na(HQ_Notes),"",paste0("Comments from BLM HQ: ", HQ_Notes)))) %>% 
+                Evaluation = paste(Evaluation, ifelse(is.na(HQ_Notes),"",paste0("Comments from BLM HQ: ", HQ_Notes))),
+                BLM_SSS_States = ifelse(is.na(BLM_SSS_States), "NA", BLM_SSS_States)) %>% 
   rename_with(.fn = gsub,pattern = "\\.", replacement = " ") %>%
   rename_with(.fn = gsub,pattern = "_", replacement = " ") #%>% 
 #dplyr::select("Higher Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "ESA Status", "BLM SSS States", "USFWS Recovery Priority Num", "Evaluation", "Tier", "BLM Practicability Score", "BLM Multispecies Score", "BLM Partnering Score", "Notes")
@@ -137,29 +137,29 @@ shinyApp(
     
     shinyjs::hidden(
       div(id = "user_interface", 
-
+          
           absolutePanel(id = "grey_backdrop",
                         class = "panel panel-default",
                         top = 0, left = 0, right = 0, bottom = 0,
                         width = "100vw",
                         height = "200vh",
                         style = "background-color: rgba(150, 150, 150, 0.8); z-index: 800 !important; overflow-x: hidden !important; overflow-y: hidden !important;",
-
-
-          absolutePanel(id = "instructions_panel",
-                        class = "panel panel-default",
-                        top = "20vh", left = "15vw", right = "15vh", bottom = "20vh",
-                        width = "70vw",
-                        height = "60vh",
-                        style = "padding: 1em; background-color: white; z-index: 1000 !important;",
-
-
-                        glide(
-                          height = "350px",
-                          screen(
-                            h2("Welcome to the BLM SSS Prioritization Data Entry and Review Application"),
-                            h3("In short"),
-                            HTML("
+                        
+                        
+                        absolutePanel(id = "instructions_panel",
+                                      class = "panel panel-default",
+                                      top = "20vh", left = "15vw", right = "15vh", bottom = "20vh",
+                                      width = "70vw",
+                                      height = "60vh",
+                                      style = "padding: 1em; background-color: white; z-index: 1000 !important;",
+                                      
+                                      
+                                      glide(
+                                        height = "350px",
+                                        screen(
+                                          h2("Welcome to the BLM SSS Prioritization Data Entry and Review Application"),
+                                          h3("In short"),
+                                          HTML("
                                  <ul>
                                    <li>The BLM Special Status Species (SSS) Prioritization process combines data from NatureServe with data
                               provided by the BLM within a decision tree to assign a priority tier for each SSS</li>
@@ -167,20 +167,20 @@ shinyApp(
                                    <li>The application will enable you to review and edit BLM-provided scores for each SSS and comment on the resulting priority Tier assignment (1=high priority, 4=low priority)</li>
                                     </ul>
                                  ")
-                          ),
-                          screen(
-                            h3("Get started"),
-                            HTML("
+                                        ),
+                              screen(
+                                h3("Get started"),
+                                HTML("
                                  <ul>
                                    <li>Begin by entering your contact information</li>
                                    <li>Select your BLM affiliation - a table with SSS relevant to your state affiliation will appear for you to review</li>
                                    <li>You can filter the table using the cells below the field names to navigate to the SSS you want to review</li>
                                     </ul>
                                  ")
-                          ),
-                          screen(
-                            h3("Review scores"),
-                            shiny::HTML("
+                              ),
+                              screen(
+                                h3("Review scores"),
+                                shiny::HTML("
                                  <ul>
                                   <li>Double-click on any cell in the 'BLM Score' columns to edit any of the scores - 'Practical Cons BLM Score', 'Multispecies Benefit BLM Score', 'Partnering Opps BLM Score'</li>
                                   <li>'BLM Score' values are defined as 1=low, 2=low, 3=medium, 4=high, 5=very high</li>
@@ -188,10 +188,10 @@ shinyApp(
                                   <li>You can submit a note by clicking in the relevant cell in the 'Notes' column</li>
                                  </ul>
                                  ")
-                          ),
-                          screen(
-                            h3("Submit feedback"),
-                            shiny::HTML("
+                              ),
+                              screen(
+                                h3("Submit feedback"),
+                                shiny::HTML("
                                  <ul>
                                    <li>Once you have reviewed the scores for a species click on the corresponding row to select it. This will be necessary to successfully submit your suggested scores and notes</>
                                    <li>After you have clicked on every row for which you have reviewed the scores, click Submit!</li>
@@ -199,16 +199,16 @@ shinyApp(
                                    <li>Navigate to more pages of results using the menu at the bottom right of the table</li>
                                  </ul>
                                  ")
-                          ),
-                          controls_position = "top"
+                              ),
+                              controls_position = "top"
+                                      ),
+                              
+                              fluidRow(style = "text-align: center;", 
+                                       bsButton("go_to_app", label = "Go to App", size = "large")
+                              )
+                        )
           ),
           
-          fluidRow(style = "text-align: center;", 
-                   bsButton("go_to_app", label = "Go to App", size = "large")
-          )
-          )
-          ),
-
           fluidRow(style = "padding-left: 30px; padding-top: 20px;",
                    
                    img(src = "ns_logo.png"),
@@ -222,29 +222,29 @@ shinyApp(
                      
                      column(width = 9,
                             
-                     h3("To start, select you BLM affiliation and enter your contact details"),
-                     
-                     fluidRow(p("This is required to review and successfully submit scores!"), style = "padding-left: 15px;"),
-                     
-                     column(width = 3, 
-                            fluidRow(h4("BLM affiliation:")),
-                            fluidRow(selectizeInput("selected_state", "", choices = c("", "Headquarters", sort(gsub(" ", "", gsub(" ", "", unique(strsplit(paste0(latest_scores$`BLM SSS States`, collapse = ","), split = ",")[[1]]))))), width = "95%")),
-                            fluidRow(
-                                   p(em("NOTE: Only species from selected state will be visible"), style = "font-size: 12px;")
+                            h3("To start, select your BLM affiliation and enter your contact details"),
+                            
+                            fluidRow(p("This is required to review and successfully submit scores!"), style = "padding-left: 15px;"),
+                            
+                            column(width = 3, 
+                                   fluidRow(h4("BLM affiliation:")),
+                                   fluidRow(selectizeInput("selected_state", "", choices = c("", "Headquarters", sort(gsub(" ", "", gsub(" ", "", unique(strsplit(paste0(latest_scores$`BLM SSS States`, collapse = ","), split = ",")[[1]]))))), width = "95%")),
+                                   fluidRow(
+                                     p(em("NOTE: Only species from selected state will be visible"), style = "font-size: 12px;")
+                                   )
+                            ),
+                            column(width = 3, 
+                                   fluidRow(h4("First name: ")),
+                                   fluidRow(textInput(inputId = "first_name", label = "", width = "95%"))
+                            ),
+                            column(width = 3, 
+                                   fluidRow(h4("Last name: ")),
+                                   fluidRow(textInput(inputId = "last_name", label = "", width = "95%"))
+                            ),
+                            column(width = 3, 
+                                   fluidRow(h4("Email address: ")),
+                                   fluidRow(textInput(inputId = "email", label = "", width = "95%"))
                             )
-                     ),
-                     column(width = 3, 
-                            fluidRow(h4("First name: ")),
-                            fluidRow(textInput(inputId = "first_name", label = "", width = "95%"))
-                     ),
-                     column(width = 3, 
-                            fluidRow(h4("Last name: ")),
-                            fluidRow(textInput(inputId = "last_name", label = "", width = "95%"))
-                     ),
-                     column(width = 3, 
-                            fluidRow(h4("Email address: ")),
-                            fluidRow(textInput(inputId = "email", label = "", width = "95%"))
-                     )
                      ),
                      column(width = 3,
                             div(style = "width: 90%; padding: 1em; background-color: rgba(211, 211, 211, 0.8);",
@@ -252,14 +252,14 @@ shinyApp(
                                 fluidRow(style = "padding-left: 15px;", actionButton("open_instructions", label = "Open Onscreen App Instructions", width = "95%")),
                                 fluidRow(style = "padding-left: 15px;", actionButton("open_guide", label = "Open Users Guide Document", onclick ="window.open('https://natureserve01.sharepoint.com/:w:/g/teamsites/BLM/Ef5rCPh-XA1JjVPrdT9x8boB4vzxuFi4creV8igDUjXRNg?e=MYlMWF', '_blank')", width = "95%")),
                                 fluidRow(style = "padding-left: 15px;",
-                                  actionButton(inputId = "view_tree", label = "View Prioritization Decision Tree", style = "secondary", width = "95%"),
+                                         actionButton(inputId = "view_tree", label = "View Prioritization Decision Tree", style = "secondary", width = "95%"),
                                          tags$style(
                                            type = 'text/css',
                                            '.modal-dialog { width: 90vw; }'
                                          ),
                                          bsModal(id = "decisiontree", title = "Prioritization Decision Tree", trigger = "view_tree", div(img(src = "decision_tree_augmented.png"), style = "overflow-x: scroll !important;"))
-                                  )
                                 )
+                            )
                      )
                    ),
                    
@@ -355,14 +355,14 @@ shinyApp(
           shinyjs::show("filtered_table_panel")
           # if (input$selected_state != ""){
           #   state_scores$values <- state_scores$values %>%
-          #     dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID"), collapse = "|"))))
+          #     dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|"))))
           # }
         }
         
       })
     
     observe({
-      latest_scores_edits$values <- state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID"), collapse = "|"))))
+      latest_scores_edits$values <- state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|"))))
     })
     
     output$filtered_table <- renderDT({
@@ -370,17 +370,13 @@ shinyApp(
       # Add this code if need to add Login module
       req(credentials()$user_auth)
       
-      n.cols <- ncol(state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID"), collapse = "|")))))
+      n.cols <- ncol(state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))))
       
-<<<<<<< HEAD
-      datatable(state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID"), collapse = "|")))),
-=======
       
       
       datatable(state_scores$values %>% 
                   dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))) %>% 
                   dplyr::rename(`Provisional Tier (1=high priority, 4=low priority)` = `Provisional Tier`),
->>>>>>> bc97f426ded584d39c63bf0761b4b76c5b42b9ff
                 editable = list(target = "cell", disable = list(columns = c(1:(n.cols-4)))),
                 # callback = JS(callback),
                 extensions = c('FixedColumns', 'FixedHeader'),
@@ -420,11 +416,11 @@ shinyApp(
                            p(renderText({Eval$text})),
                            h5("Table 1. Review history. Notes made by BLM staff during reviews of provisional scores and tiers."),
                            tableOutput("reviews")
-                           ),
+                    ),
                     column(width = 6, 
                            h5("Table 2. Additional input data for prioritization of this taxon. NA values indicate that no data were available for assessment."),
                            tableOutput("scores")
-                           )
+                    )
                   )
                   
                   # fluidRow(align = "center",
