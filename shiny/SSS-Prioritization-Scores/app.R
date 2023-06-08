@@ -54,8 +54,8 @@ latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets
                 Provisional_Tier = as.factor(Tier),
                 Group = as.factor(Lower_Level_Informal_Group),
                 Global_Rank = as.factor(Rounded_Global_Rank),
-                Evaluation = paste(Evaluation, ifelse(is.na(HQ_Notes),"",paste0("Comments from BLM HQ: ", HQ_Notes))),
-                BLM_SSS_States = ifelse(is.na(BLM_SSS_States), "NA", BLM_SSS_States)) %>% 
+                BLM_SSS_States = ifelse(is.na(BLM_SSS_States), "NA", BLM_SSS_States),
+                Evaluation = paste(Evaluation, ifelse(is.na(HQ_Notes),"",paste0("Comments from BLM HQ: ", HQ_Notes)))) %>% 
   rename_with(.fn = gsub,pattern = "\\.", replacement = " ") %>%
   rename_with(.fn = gsub,pattern = "_", replacement = " ") #%>% 
 #dplyr::select("Higher Level Informal Group", "Scientific Name", "NatureServe Common Name", "Rounded Global Rank", "ESA Status", "BLM SSS States", "USFWS Recovery Priority Num", "Evaluation", "Tier", "BLM Practicability Score", "BLM Multispecies Score", "BLM Partnering Score", "Notes")
@@ -277,14 +277,14 @@ shinyApp(
           shinyjs::show("filtered_table_panel")
           # if (input$selected_state != ""){
           #   state_scores$values <- state_scores$values %>%
-          #     dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|"))))
+          #     dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID"), collapse = "|"))))
           # }
         }
         
       })
     
     observe({
-      latest_scores_edits$values <- state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|"))))
+      latest_scores_edits$values <- state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID"), collapse = "|"))))
     })
     
     output$filtered_table <- renderDT({
@@ -292,9 +292,9 @@ shinyApp(
       # Add this code if need to add Login module
       req(credentials()$user_auth)
       
-      n.cols <- ncol(state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))))
+      n.cols <- ncol(state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID"), collapse = "|")))))
       
-      datatable(state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))),
+      datatable(state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID"), collapse = "|")))),
                 editable = list(target = "cell", disable = list(columns = c(1:(n.cols-4)))),
                 # callback = JS(callback),
                 options = list(
