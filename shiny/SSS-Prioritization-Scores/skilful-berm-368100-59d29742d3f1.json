@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "skilful-berm-368100",
+  "private_key_id": "59d29742d3f1a413c14784c9a40632036629a3df",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCgFb9vqnlpqs2b\n9k3g6XStDSG1DKS+NsoRqfgsu0QOyIXvWGUcTNMKfW80cfQjry8yAGECUyxt1jJU\n20TAS5VC6hoTWnFhbaV2Qz+kbi7p5Mvkz4WCNRet/Yzy6eGB3+Si4ay+t0Fw3yXo\nGMBFBt2uPr0cbeUeR/FrhWDTSUqDH5iyVQ1QRc7BBtm4gfxk0uxi6jRl1mvrttX/\nBTG3e3P54ex0jDQ+HsOV0RwDXQ09QR1nPbbuiNoXVbSMs73QbSRdoZ9+GxcI1Jj+\nIt6GhUOaerFeZuLoBN2/SNkiK6/0oXBVO6F97VLDV31LCRrpkepV9ncmDnW+HQ15\nYnG0IkA/AgMBAAECggEAGqFeM2nFAR6ATgcXD9NWQlQSZ5IJtSOGfDzDA6dIBuY1\nsvSzUUC4b3YhXInuW/dQXxLauxkcpXhB7trRC498mOE6YujN6Vq6RpD2UoNf0Nnr\npI3Jvw4s+RfaQtiZrSdn20QLyWgmfevT3FHYaO3fompeaY8gfmfnvIQMxj6FeN1c\n2tFA+aAF6Yddar4gZLreHqBTvwl0xzTUGejU30n5/263s5+BOodbbftsfdqxez02\n/oUWYqTX5xlxrJA4Qo0OrkWPIXf3hW7zTtRJfkYv+E6Zl1E6Tk6RB4xJZ6ZTMvn4\nOh9GWljH8geUZvKso95qwia4xsc1E2d0IHh1lV2FXQKBgQDgC6RcK/OuJpL+MXOJ\ndkhhWbR4KWt5QEQpOcSvEZkiToid2sTaiEedyDNjj8ffOjg6vff5PTAdfJGJITmm\nm8RJs9SZtXF79he+abHkxn3u5rm2i+niihglxOInXKrlAFQh7ZtrD9X53pBsY8n3\nexQXG/YSkdKIAvqhdP4t2359ZQKBgQC26sbA/KkVKKSDOvyjjsP1hmk1u5vYRcow\n+VfxN0kWU2G/2iYKGGL7PSEtxUhTEj8ERQMUO4nC4R/k2YaaRwLEeSo3JTZ80s1O\nCTyFnNxZliJUNO5jGyhnoxzbk/idbp8Qd1C9ZTVGhRXwNV83UMk1ruWtLR16+lSb\n8d/Z5snu0wKBgQDS5cKazPi+NytpQi2K+R/bG7EI55x2b6t5zxo43ezzYU+yoCtr\ntpsLiFfvYXn4xHoHuakCIbn4F7l7hx4YmkokQrZe1nB0CsyA/kdpnfsPdnrcvkm0\naN+gNfvYp59qn2uS4HLLTgXTBtGWZjzIzD+2HSj+g+vVAlDgyRs3GYWxDQKBgQCe\niNNkdleRiB01xA0tMNJ0XV+Ye5byFmLMmX94CEOnPvNslYT8oPBA8lVsVx19KkZF\nzA6EHaojpny/Gy1HT559bMqC6xTTkNzx8p1q7G4qky4Dr7ChYutdD4k2YoRK5pKk\ncdUfobVP/o7qF0gEKFeL2J8lvgFcEdT9J+Cs+hMwkwKBgDKjk1shUPjjF4++nyfb\n+X0uMQgcG+OB0cHF7kB+anKKoK7VYK6S5CEtYP5YWaw+zBLil8/2Jeo5uWpLkIfI\n3E/keyDKwISsVSDhnbv+rmj6MTLI90PeZh32JbPUgLMU6M0WEox5sE7Z2EU+/1HE\nLRI72Bc00MADDRB5jn2fwP8m\n-----END PRIVATE KEY-----\n",
+  "client_email": "model-review@skilful-berm-368100.iam.gserviceaccount.com",
+  "client_id": "110332295530359093339",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/model-review%40skilful-berm-368100.iam.gserviceaccount.com"
+}
