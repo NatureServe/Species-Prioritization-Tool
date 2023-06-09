@@ -185,7 +185,7 @@ shinyApp(
                                   <li>Double-click on any cell in the 'BLM Score' columns to edit any of the scores - 'Practical Cons BLM Score', 'Multispecies Benefit BLM Score', 'Partnering Opps BLM Score'</li>
                                   <li>'BLM Score' values are defined as 1=low, 2=low, 3=medium, 4=high, 5=very high</li>
                                   <li>'BLM Score' values are combined with NatureServe data to assign each SSS to a priority Tier (1=high priority, 4=low priority)</li>
-                                  <li>You can submit a note by clicking in the relevant cell in the 'Notes' column</li>
+                                  <li>You can submit a note by double-clicking in the relevant cell in the 'Notes' column</li>
                                  </ul>
                                  ")
                               ),
@@ -249,8 +249,8 @@ shinyApp(
                      column(width = 3,
                             div(style = "width: 90%; padding: 1em; background-color: rgba(211, 211, 211, 0.8);",
                                 fluidRow(h4("Find Help!"), style = "padding-left: 15px;"),
-                                fluidRow(style = "padding-left: 15px;", actionButton("open_instructions", label = "Open Onscreen App Instructions", width = "95%")),
-                                fluidRow(style = "padding-left: 15px;", actionButton("open_guide", label = "Open Users Guide Document", onclick ="window.open('https://natureserve01.sharepoint.com/:w:/g/teamsites/BLM/Ef5rCPh-XA1JjVPrdT9x8boB4vzxuFi4creV8igDUjXRNg?e=MYlMWF', '_blank')", width = "95%")),
+                                fluidRow(style = "padding-left: 15px;", actionButton("open_instructions", label = "Open App Instructions", width = "95%")),
+                                fluidRow(style = "padding-left: 15px;", actionButton("open_guide", label = "Open Users Guide", onclick ="window.open('https://natureserve01.sharepoint.com/:w:/g/teamsites/BLM/Ef5rCPh-XA1JjVPrdT9x8boB4vzxuFi4creV8igDUjXRNg?e=MYlMWF', '_blank')", width = "95%")),
                                 fluidRow(style = "padding-left: 15px;",
                                          actionButton(inputId = "view_tree", label = "View Prioritization Decision Tree", style = "secondary", width = "95%"),
                                          tags$style(
