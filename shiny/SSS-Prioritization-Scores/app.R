@@ -250,7 +250,7 @@ shinyApp(
                             div(style = "width: 90%; padding: 1em; background-color: rgba(211, 211, 211, 0.8);",
                                 fluidRow(h4("Find Help!"), style = "padding-left: 15px;"),
                                 fluidRow(style = "padding-left: 15px;", actionButton("open_instructions", label = "Open App Instructions", width = "95%")),
-                                fluidRow(style = "padding-left: 15px;", actionButton("open_guide", label = "Open Users Guide", onclick ="window.open('https://natureserve01.sharepoint.com/:w:/g/teamsites/BLM/Ef5rCPh-XA1JjVPrdT9x8boBAEojLegBWEgeHeQsS0vKPg?e=Z6SitG', '_blank')", width = "95%")),
+                                fluidRow(style = "padding-left: 15px;", actionButton("open_guide", label = "Open Users Guide", onclick ="window.open('https://natureserve01.sharepoint.com/:b:/g/teamsites/BLM/EVqGn1b0ICFPoXYYW0MzPz8BjhHYKYoXhbAGnc6vPN_Fhg?e=mnneOy', '_blank')", width = "95%")),
                                 fluidRow(style = "padding-left: 15px;",
                                          actionButton(inputId = "view_tree", label = "View Prioritization Decision Tree", style = "secondary", width = "95%"),
                                          tags$style(
