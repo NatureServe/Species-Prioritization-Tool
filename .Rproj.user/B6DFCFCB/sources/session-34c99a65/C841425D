@@ -3,7 +3,7 @@
     "path": "G:/Dropbox/natureserve/apps/Species-Prioritization-Tool/Species-Prioritization-Tool/shiny/SSS-Prioritization-Scores/www/style.css",
     "project_path": "shiny/SSS-Prioritization-Scores/www/style.css",
     "type": "css",
-    "hash": "4283783927",
+    "hash": "1540255225",
     "contents": "",
     "dirty": false,
     "created": 1685736924297.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "20,1",
-        "scrollLine": "12"
+        "cursorPosition": "82,1",
+        "scrollLine": "54"
     },
     "folds": "",
-    "lastKnownWriteTime": 1685747516,
+    "lastKnownWriteTime": 1686860774,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1685747516942,
+    "last_content_update": 1686860774246,
     "read_only": false,
     "read_only_alternatives": []
 }

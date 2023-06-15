@@ -68,4 +68,18 @@ li {
    font-size: 12px !important;
 }
 
+.btn {
+  font-size: 11px !important;
+}
+
+ul {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+  height: 250px !important;
+}
+
+.glide__slides {
+    height: 250px !important;
+}
+
 }
