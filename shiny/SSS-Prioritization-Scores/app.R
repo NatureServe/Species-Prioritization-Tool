@@ -230,7 +230,7 @@ shinyApp(
                                    fluidRow(h4("BLM affiliation:")),
                                    fluidRow(selectizeInput("selected_state", "", choices = c("", "Headquarters", sort(gsub(" ", "", gsub(" ", "", unique(strsplit(paste0(latest_scores$`BLM SSS States`, collapse = ","), split = ",")[[1]]))))), width = "95%")),
                                    fluidRow(
-                                     p(em("NOTE: Only species from selected state will be visible"), style = "font-size: 12px;")
+                                     p(em("NOTE: Only species from selected state will be visible. Select Headquarters to view all species."), style = "font-size: 12px;")
                                    )
                             ),
                             column(width = 3, 
