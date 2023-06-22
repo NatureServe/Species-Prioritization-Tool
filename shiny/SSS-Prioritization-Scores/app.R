@@ -68,9 +68,8 @@ suggested_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadshe
   # unique() %>%
   # data.frame(stringsAsFactors = TRUE) %>% rename_with(.fn = gsub,pattern = "\\.", replacement = " ") %>% mutate(Reviewers = paste0(`Reviewer Name`, " (", `Reviewer Affiliation`, ")")) %>% group_by(`Scientific Name`) %>% summarise(Reviewers = paste(Reviewers, collapse = ", "), Reviews = paste(Notes, collapse = "; "))
 
-# latest_scores <- left_join(latest_scores, suggested_scores) %>% 
-#  mutate(`Scientific Name` = paste0("<a href='", `Explorer url`,"' target='_blank'>", `Scientific Name`,"</a>"),
-#         Reviewers = ifelse(is.na(Reviewers), "None", Reviewers))
+# latest_scores <- latest_scores %>% 
+#  dplyr::mutate(`Scientific Name` = paste0("<a href='", `Explorer url`,"' target='_blank'>", `Scientific Name`,"</a>"))
 
 ## Code to make a larger text box for the notes field in the table. Source; https://github.com/rstudio/DT/issues/821
 # callback <- c(
@@ -175,8 +174,8 @@ shinyApp(
                                 HTML("
                                  <ul>
                                    <li>Begin by entering your contact information</li>
-                                   <li>Select your BLM affiliation - a table with SSS relevant to your state affiliation will appear for you to review</li>
-                                   <li>You can filter the table using the cells below the field names to navigate to the SSS you want to review</li>
+                                   <li>You can filter the results table to view all species or only species in your state.</li>
+                                   <li>You can further filter the table using the cells below the field names to navigate to the SSS you want to review</li>
                                     </ul>
                                  ")
                               ),
@@ -230,27 +229,27 @@ shinyApp(
                             
                             column(width = 3, 
                                    fluidRow(h4("BLM affiliation:")),
-                                   fluidRow(selectizeInput("affiliation", "", choices = c("", "Headquarters", sort(gsub(" ", "", gsub(" ", "", unique(strsplit(paste0(latest_scores$`BLM SSS States`, collapse = ","), split = ",")[[1]]))))), width = "95%"))
+                                   fluidRow(selectizeInput("affiliation", "", choices = c("", "Headquarters", sort(gsub(" ", "", gsub(" ", "", unique(strsplit(paste0(latest_scores$`BLM SSS States`, collapse = ","), split = ",")[[1]]))))), width = "95%"), style = "padding-top: 0;")
                             ),
                             
                             column(width = 3, 
                                    fluidRow(h4("First name: ")),
-                                   fluidRow(textInput(inputId = "first_name", label = "", width = "95%"))
+                                   fluidRow(textInput(inputId = "first_name", label = "", width = "95%"), style = "padding-top: 0;")
                             ),
                             column(width = 3, 
                                    fluidRow(h4("Last name: ")),
-                                   fluidRow(textInput(inputId = "last_name", label = "", width = "95%"))
+                                   fluidRow(textInput(inputId = "last_name", label = "", width = "95%"), style = "padding-top: 0;")
                             ),
                             column(width = 3, 
                                    fluidRow(h4("Email address: ")),
-                                   fluidRow(textInput(inputId = "email", label = "", width = "95%"))
+                                   fluidRow(textInput(inputId = "email", label = "", width = "95%"), style = "padding-top: 0;")
                             )
                      ),
                      column(width = 3,
                             div(style = "width: 90%; padding: 1em; background-color: rgba(211, 211, 211, 0.8);",
                                 fluidRow(h4("Find Help!"), style = "padding-left: 15px;"),
                                 fluidRow(style = "padding-left: 15px;", actionButton("open_instructions", label = "Open App Instructions", width = "95%")),
-                                fluidRow(style = "padding-left: 15px;", actionButton("open_guide", label = "Open Users Guide", onclick ="window.open('https://natureserve01.sharepoint.com/:b:/g/teamsites/BLM/EXmYAhrOFkRKnn8oUP-PsK4BzppTPeE_WwUQsv8OIeQozw?e=EGBPwX', '_blank')", width = "95%")),
+                                fluidRow(style = "padding-left: 15px;", actionButton("open_guide", label = "Open Users Guide", onclick ="window.open('https://natureserve01.sharepoint.com/:b:/g/teamsites/BLM/EevNQuwJa_9Po8ykhDugo0UBq1KLcHTo8rQ_Cskza6h2ZA?e=NWeYLk', '_blank')", width = "95%")),
                                 fluidRow(style = "padding-left: 15px;",
                                          actionButton(inputId = "view_tree", label = "View Prioritization Decision Tree", style = "secondary", width = "95%"),
                                          tags$style(
@@ -272,7 +271,7 @@ shinyApp(
                          ),
                          
                          fluidRow(h4("Filter by state")),
-                         fluidRow(column(width = 3, style = "padding-left: 0;", selectizeInput("selected_state", "", choices = c("", "All", sort(gsub(" ", "", gsub(" ", "", unique(strsplit(paste0(latest_scores$`BLM SSS States`, collapse = ","), split = ",")[[1]]))))), width = "70%"))),
+                         fluidRow(column(width = 3, style = "padding-left: 0;", selectizeInput("selected_state", "", choices = c("", "All", sort(gsub(" ", "", gsub(" ", "", unique(strsplit(paste0(latest_scores$`BLM SSS States`, collapse = ","), split = ",")[[1]]))))), width = "75%"))),
                          fluidRow(
                            p(em("NOTE: Select 'All' to view all species or select a state to view only species from your state. If you see more or less species than expected by filtering for your state, please indicate so in the 'Notes' field."), style = "font-size: 12px;")
                          ),
@@ -283,7 +282,7 @@ shinyApp(
                          ),
                          
                          fluidRow(
-                           column(3, style = "padding-left: 30; margin-top: 30px;", prettySwitch(inputId = "reviewed_all", label = "Mark BLM scores for all species in table above as reviewed", status = "primary"))
+                           column(3, style = "padding-left: 30; margin-top: 30px;", prettySwitch(inputId = "reviewed_all", label = "Mark BLM scores for all species in your state above as reviewed", status = "primary"))
                          ),
                          
                          fluidRow(
@@ -365,7 +364,7 @@ shinyApp(
       })
     
     observe({
-      latest_scores_edits$values <- state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|"))))
+      latest_scores_edits$values <- state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "All", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|"))))
     })
     
     output$filtered_table <- renderDT({
@@ -373,12 +372,12 @@ shinyApp(
       # Add this code if need to add Login module
       req(credentials()$user_auth)
       
-      n.cols <- ncol(state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))))
+      n.cols <- ncol(state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "All", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))))
       
       
       
       datatable(state_scores$values %>% 
-                  dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "Headquarters", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))) %>% 
+                  dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "All", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))) %>% 
                   dplyr::rename(`Provisional Tier (1=high priority, 4=low priority)` = `Provisional Tier`),
                 editable = list(target = "cell", disable = list(columns = c(1:(n.cols-4)))),
                 # callback = JS(callback),
@@ -404,11 +403,15 @@ shinyApp(
       
     })
     
-    Eval <- reactiveValues(text = '')
+    Eval <- reactiveValues(name = '', tier = '', text = '', URL = '')
 
     observeEvent(input$select_button, {
       s <- as.numeric(strsplit(input$select_button, "_")[[1]][2])
+      
       Eval$text <<- latest_scores$Evaluation[s]
+      Eval$name <<- latest_scores$`NatureServe Common Name`[s]
+      Eval$tier <<- latest_scores$Tier[s]
+      Eval$URL <<- latest_scores$`Explorer url`[s]
       output$reviews <- renderDT({
         out <- suggested_scores %>% 
           dplyr::filter(`Scientific Name` == latest_scores$`Scientific Name`[s]) %>% 
@@ -452,8 +455,9 @@ shinyApp(
       output$modal <- renderUI({
         tagList(
           bsModal(paste('model', s ,sep=''), "Provisional Assessment", "select_button", size = "small",
+                  h4(renderText({paste0(Eval$name, ": ", Eval$tier)})),
                   p(renderText({Eval$text})),
-                  br(),
+                  div(renderUI(HTML(paste0("<a href = '", Eval$URL, "', target = '_blank'>Go to NatureServe Explorer page</a>"))), style = "padding-bottom: 30px;"),
                   h5("Table 1. Additional input data for prioritization of this taxon. NA values indicate that no data were available for assessment."),
                   DT::dataTableOutput("scores"),
                   br(),
@@ -502,6 +506,10 @@ shinyApp(
         sheet_append(ss = "https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", data = reviewed_scores, sheet = "suggested_scores")
         # session$reload()
         sendSweetAlert(session, type = "success", title = "Success!", text = paste0("We have received your scores for ", nrow(reviewed_scores), " species"), closeOnClickOutside = TRUE)
+        
+        filtered_table_proxy %>% 
+          reloadData(clearSelection = "row")
+        
       } else {
         if (input$email == "") {
           sendSweetAlert(session, type = "warning", title = "Oops!", text = "You need to enter your contact details at the top of this form", closeOnClickOutside = TRUE)
@@ -509,6 +517,8 @@ shinyApp(
           sendSweetAlert(session, type = "warning", title = "Oops!", text = "You did not select any scores to submit. Select the scores you have reviewed by clicking on the row.", closeOnClickOutside = TRUE)
         }
       }
+      
+      
       
     })
     
