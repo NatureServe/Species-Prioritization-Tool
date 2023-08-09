@@ -201,7 +201,7 @@ sss.data <- left_join(sss.data, BLM.scores) %>% mutate(
   select(-c(Practical_Cons_BLM_Score_av, Partnering_Opps_BLM_Score_av, Multispecies_Benefit_BLM_Score_av))
 
 ## Add results from jurisdictional analysis
-ja <- read_excel("C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Provided to BLM/BLM - Information for T & E Strategic Decision-Making - October 2022.xlsx", sheet = "BLM SSS Information by State", skip = 1) %>% 
+ja <- read_excel("C:/Users/max_tarjan/NatureServe/BLM - BLM SSS Distributions and Rankings Project-FY21/Provided to BLM/BLM - Information for T & E Strategic Decision-Making - October 2022 - Copy.xlsx", sheet = "BLM SSS Information by State", skip = 1) %>% 
   mutate(Percent_EOs_BLM_2019 = ifelse(`Total Occurrences on BLM Lands (West)`==0 & `Total Occurrences Rangewide` > 0,0, as.numeric(`Occurrences on BLM Lands (West) / Total Occurrences Rangewide`)*100),
          Percent_Model_Area_BLM = `Percent Suitable Habitat on BLM Lands (West)`*100) %>%
   rename("NatureServe_Element_ID" = "Element Global ID")
@@ -259,7 +259,7 @@ metadata<-data.frame(Field = names(changes), Description = c("Name", "Email", "A
 
 library(openxlsx)
 
-results_file_name <- paste0("NatureServe - ESA Species - Suggest Scores -", Sys.Date(), ".xlsx")
+results_file_name <- paste0("Output/NatureServe - ESA Species - Suggest Scores -", Sys.Date(), ".xlsx")
 wb <- openxlsx::createWorkbook()
 addWorksheet(wb, "Metadata")
 writeData(wb, "Metadata", metadata, headerStyle = createStyle(textDecoration = "Bold"))

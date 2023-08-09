@@ -9,7 +9,7 @@ library(openxlsx)
 
 #sss<-read_excel(path = "Data/Prioritization_Tool_11Aug2022.xlsx", sheet = "Data")
 #sss<-read_excel(path = "Data/NatureServe - Random Test Species - National Data_19 Oct 2022.xlsx", sheet= "Sheet1")
-sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-02-06")
+sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-08-08")
 sss$USFWS_Recovery_Priority_Num<-as.character(sss$USFWS_Recovery_Priority_Num)
 sss$USFWS_Recovery_Priority_Num[which(sss$USFWS_Recovery_Priority_Num == "NULL")] <- NA
 
@@ -111,8 +111,10 @@ dev.off()
 completeness <- subset(results, select = c(`A_Management_Responsibility`, `B_Imperilment`, C_Practicability, E_Multispecies_Benefits, F_Partnering_Ops)) %>% gather(key = "Criteria", value = "TF") %>% group_by(Criteria, TF) %>% summarise(n.spp = n()) %>% spread(key = "TF", value = "n.spp") %>% mutate(Percent_data_completeness = round((`FALSE`+`TRUE`)/nrow(results)*100, 1)) %>% subset(select = -`<NA>`) %>% rename("TRUE (No.Spp)" = `TRUE`, "FALSE (No.Spp)" = `FALSE`)
 
 ## Identify species that changed tier due to updates from suggested scores
-old.results <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-01-05") %>% rename(old.Tier = Tier)
+old.results <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-02-02") %>% rename(old.Tier = Tier)
 
-tier.compare <- subset(results, select=c(NatureServe_Common_Name, Tier, BLM_Scores_Reviewed)) %>% left_join(subset(old.results, select =c(NatureServe_Common_Name, old.Tier)))
+tier.compare <- subset(results, select=c(NatureServe_Element_ID, Scientific_Name, NatureServe_Common_Name, Tier, BLM_Scores_Reviewed)) %>% left_join(subset(old.results, select =c(NatureServe_Common_Name, old.Tier))) %>% mutate(Tier.change = ifelse(Tier != old.Tier, T, F))
 
-tier.compare %>% filter(Tier != old.Tier) %>% data.frame()
+tier.compare %>% filter(Tier != old.Tier & Tier != "Data deficient") %>% data.frame()
+spp.tier.change <- tier.compare %>% filter(Tier != old.Tier & Tier != "Data deficient") %>% data.frame()
+spp.tier.change <- spp.tier.change$Scientific_Name
