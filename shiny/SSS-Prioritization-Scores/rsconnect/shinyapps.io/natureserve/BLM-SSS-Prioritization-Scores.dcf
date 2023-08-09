@@ -1,0 +1,14 @@
+name: BLM-SSS-Prioritization-Scores
+title: BLM-SSS-Prioritization-Scores
+username:
+account: natureserve
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 7986901
+bundleId: 7377336
+url: https://natureserve.shinyapps.io/BLM-SSS-Prioritization-Scores/
+when: 1687468070.01725
+lastSyncTime: 1687468070.01726
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: app-depricated-20230607.R|www/decision_tree.png
