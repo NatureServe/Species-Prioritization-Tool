@@ -113,8 +113,12 @@ completeness <- subset(results, select = c(`A_Management_Responsibility`, `B_Imp
 ## Identify species that changed tier due to updates from suggested scores
 old.results <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-02-02") %>% rename(old.Tier = Tier)
 
-tier.compare <- subset(results, select=c(NatureServe_Element_ID, Scientific_Name, NatureServe_Common_Name, Tier, BLM_Scores_Reviewed)) %>% left_join(subset(old.results, select =c(NatureServe_Common_Name, old.Tier))) %>% mutate(Tier.change = ifelse(Tier != old.Tier, T, F))
+tier.compare <- subset(results, select=c(NatureServe_Element_ID, Scientific_Name, NatureServe_Common_Name, BLM_SSS_States, Tier, BLM_Scores_Reviewed)) %>% left_join(subset(old.results, select =c(NatureServe_Common_Name, old.Tier))) %>% mutate(Tier.change = ifelse(Tier != old.Tier, T, F))
 
 tier.compare %>% filter(Tier != old.Tier & Tier != "Data deficient") %>% data.frame()
 spp.tier.change <- tier.compare %>% filter(Tier != old.Tier & Tier != "Data deficient") %>% data.frame()
 spp.tier.change <- spp.tier.change$Scientific_Name
+
+##write out species that are in the prioritization application but have not received a review by BLM staff
+unreviewed <- tier.compare %>% filter(BLM_Scores_Reviewed == F) %>% select(NatureServe_Element_ID, Scientific_Name, NatureServe_Common_Name, BLM_SSS_States)
+#write.csv(unreviewed, "Output/Unreviewed_ESA_SSS_20230810.csv", row.names = F)
