@@ -191,7 +191,7 @@ BLM.scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/
   rename_with(~gsub(.x, pattern = " ", replacement = "_")) %>% unique() %>% group_by(Reviewer_Email, Scientific_Name) %>% summarise(Practical_Cons_BLM_Score = last(Practical_Cons_BLM_Score), Multispecies_Benefit_BLM_Score = last(Multispecies_Benefit_BLM_Score), Partnering_Opps_BLM_Score = last(Partnering_Opps_BLM_Score))
 ## get average score per species
 BLM.scores <- BLM.scores %>% group_by(Scientific_Name) %>% 
-  summarise(Practical_Cons_BLM_Score_av = mean(Practical_Cons_BLM_Score, na.rm=T), Multispecies_Benefit_BLM_Score_av = mean(Multispecies_Benefit_BLM_Score, na.rm=T), Partnering_Opps_BLM_Score_av = mean(Partnering_Opps_BLM_Score, na.rm=T))
+  summarise(Practical_Cons_BLM_Score_av = round(mean(Practical_Cons_BLM_Score, na.rm=T),0), Multispecies_Benefit_BLM_Score_av = round(mean(Multispecies_Benefit_BLM_Score, na.rm=T),0), Partnering_Opps_BLM_Score_av = round(mean(Partnering_Opps_BLM_Score, na.rm=T),0))
 
 sss.data <- left_join(sss.data, BLM.scores) %>% mutate(
   Practical_Cons_BLM_Score = ifelse(is.na(Practical_Cons_BLM_Score_av), Practical_Cons_BLM_Score, Practical_Cons_BLM_Score_av), 

@@ -63,7 +63,7 @@ prioritize <- function (data, species, threshold.eo, threshold.model, threshold.
   results$B1_Monitoring_Priority <- ifelse(results$A_Management_Responsibility & !results$B_Imperilment & results$`Short-Term_Trend` == "U = Unknown" & results$Rank_Review_Year > (as.numeric(format(Sys.Date(), "%Y"))-10), T, F)
   
   ##ASSIGN TO TIERS
-  results$Tier <- ifelse(is.na(results$`A_Management_Responsibility`), "Data deficient",
+  results$Tier <- ifelse(is.na(results$`A_Management_Responsibility`), "NatureServe data deficient",
                                ifelse(results$`A_Management_Responsibility`, no = "Tier 4", 
                                       ifelse(results$`B_Imperilment`, no = "Tier 4",
                                              ifelse(results$C_Practicability & !is.na(results$C_Practicability), no = "Tier 3",

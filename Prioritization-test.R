@@ -9,7 +9,7 @@ library(openxlsx)
 
 #sss<-read_excel(path = "Data/Prioritization_Tool_11Aug2022.xlsx", sheet = "Data")
 #sss<-read_excel(path = "Data/NatureServe - Random Test Species - National Data_19 Oct 2022.xlsx", sheet= "Sheet1")
-sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-08-08")
+sss<-googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-08-17")
 sss$USFWS_Recovery_Priority_Num<-as.character(sss$USFWS_Recovery_Priority_Num)
 sss$USFWS_Recovery_Priority_Num[which(sss$USFWS_Recovery_Priority_Num == "NULL")] <- NA
 
@@ -27,7 +27,7 @@ sheet_write(data = results, ss = "https://docs.google.com/spreadsheets/d/1KIpQPL
 
 ## Format results for BLM
 results_by_tier <- data.frame(matrix(NA, nrow=max(table(results$Tier)), ncol=5))
-names(results_by_tier) <- c("Tier 1", "Tier 2", "Tier 3", "Tier 4", "Data deficient")
+names(results_by_tier) <- c("Tier 1", "Tier 2", "Tier 3", "Tier 4", "NatureServe data deficient")
 for (j in 1:ncol(results_by_tier)) {
   tier.temp <- names(results_by_tier)[j]
   spp.temp <- subset(results, Tier == tier.temp)$NatureServe_Common_Name
@@ -63,7 +63,7 @@ data.plot<-data.frame(table(results$Tier))
 ##get the label positions
 data.plot <- data.plot %>%
   #arrange(desc(Var1)) %>%
-  mutate(Var1 = factor(Var1, levels = c("Tier 1", "Tier 2", "Tier 3", "Tier 4", "Data deficient"))) %>%
+  mutate(Var1 = factor(Var1, levels = c("Tier 1", "Tier 2", "Tier 3", "Tier 4", "NatureServe data deficient"))) %>%
   arrange(desc(Var1)) %>%
   mutate(lab.ypos = cumsum(Freq) - 0.5*Freq) %>%
   data.frame()
@@ -115,8 +115,8 @@ old.results <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d
 
 tier.compare <- subset(results, select=c(NatureServe_Element_ID, Scientific_Name, NatureServe_Common_Name, BLM_SSS_States, Tier, BLM_Scores_Reviewed)) %>% left_join(subset(old.results, select =c(NatureServe_Common_Name, old.Tier))) %>% mutate(Tier.change = ifelse(Tier != old.Tier, T, F))
 
-tier.compare %>% filter(Tier != old.Tier & Tier != "Data deficient") %>% data.frame()
-spp.tier.change <- tier.compare %>% filter(Tier != old.Tier & Tier != "Data deficient") %>% data.frame()
+tier.compare %>% filter(Tier != old.Tier & Tier != "NatureServe data deficient") %>% data.frame()
+spp.tier.change <- tier.compare %>% filter(Tier != old.Tier & Tier != "NatureServe data deficient") %>% data.frame()
 spp.tier.change <- spp.tier.change$Scientific_Name
 
 ##write out species that are in the prioritization application but have not received a review by BLM staff

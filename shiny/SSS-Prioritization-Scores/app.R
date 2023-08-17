@@ -49,7 +49,7 @@ user_base <- dplyr::tibble(
 #'
 #' # Load Data
 #' ## Initial scores
-latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-02-02") %>%
+latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", sheet="ESA_spp_2023-08-17") %>%
   data.frame(stringsAsFactors = TRUE) %>%
   dplyr::mutate(Notes = as.character(NA),
                 Provisional_Tier = as.factor(Tier),
