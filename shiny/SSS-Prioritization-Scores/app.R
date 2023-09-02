@@ -53,6 +53,7 @@ latest_scores <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets
   data.frame(stringsAsFactors = TRUE) %>%
   dplyr::mutate(Notes = as.character(NA),
                 Provisional_Tier = as.factor(Tier),
+                `Reviewer Suggested Tier` = as.character(Provisional_Tier),
                 Group = as.factor(Lower_Level_Informal_Group),
                 Global_Rank = as.factor(Rounded_Global_Rank),
                 Evaluation = paste(Evaluation, ifelse(is.na(HQ_Notes),"",paste0("Comments from BLM HQ: ", HQ_Notes))),
@@ -344,7 +345,7 @@ shinyApp(
       inputs
     }
     
-    state_scores <- reactiveValues(values = cbind(subset(latest_scores, select=c("Group", "Scientific Name", "NatureServe Common Name", "Global Rank", "USESA Status", "BLM SSS States", "States of Occurrence", "Provisional Tier")), `Provisional Assessment` = shinyInput(actionButton, nrow(latest_scores), 'button_', label = "Assessment", onclick = 'Shiny.onInputChange(\"select_button\",  this.id)' ), subset(latest_scores, select=c("Practical Cons BLM Score", "Multispecies Benefit BLM Score", "Partnering Opps BLM Score", "Notes"))))
+    state_scores <- reactiveValues(values = cbind(subset(latest_scores, select=c("Group", "Scientific Name", "NatureServe Common Name", "Global Rank", "USESA Status", "BLM SSS States", "States of Occurrence", "Provisional Tier")), `Provisional Assessment` = shinyInput(actionButton, nrow(latest_scores), 'button_', label = "Assessment", onclick = 'Shiny.onInputChange(\"select_button\",  this.id)' ), subset(latest_scores, select=c("Practical Cons BLM Score", "Multispecies Benefit BLM Score", "Partnering Opps BLM Score", "Reviewer Suggested Tier", "Notes"))))
     latest_scores_edits <- reactiveValues(values = latest_scores)
     
     observeEvent(
@@ -374,12 +375,12 @@ shinyApp(
       
       n.cols <- ncol(state_scores$values %>% dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "All", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))))
       
+      t <- state_scores$values %>% 
+        dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "All", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))) %>% 
+        dplyr::rename(`Provisional Tier (1=high priority, 4=low priority)` = `Provisional Tier`)
       
-      
-      datatable(state_scores$values %>% 
-                  dplyr::filter(grepl(x = `States of Occurrence`, pattern = ifelse(input$selected_state != "All", input$selected_state, paste(c("CA", "WY", "AZ", "NM", "NV", "UT", "OR", "CO", "MT", "AK", "ID", "NA"), collapse = "|")))) %>% 
-                  dplyr::rename(`Provisional Tier (1=high priority, 4=low priority)` = `Provisional Tier`),
-                editable = list(target = "cell", disable = list(columns = c(1:(n.cols-4)))),
+      datatable(t,
+                editable = list(target = "cell", disable = list(columns = c(1:(n.cols-5)))),
                 # callback = JS(callback),
                 extensions = c('FixedColumns', 'FixedHeader'),
                 options = list(
@@ -415,7 +416,7 @@ shinyApp(
       output$reviews <- renderDT({
         out <- suggested_scores %>% 
           dplyr::filter(`Scientific Name` == latest_scores$`Scientific Name`[s]) %>% 
-          dplyr::select(`Date`, `Reviewer Name`, `Reviewer Affiliation`, `Practical Cons BLM Score`, `Multispecies Benefit BLM Score`, `Partnering Opps BLM Score`, Notes) %>% 
+          dplyr::select(`Date`, `Reviewer Name`, `Reviewer Affiliation`, `Practical Cons BLM Score`, `Multispecies Benefit BLM Score`, `Partnering Opps BLM Score`, `Reviewer Suggested Tier`, Notes) %>% 
           dplyr::distinct(., .keep_all = TRUE)
       
       datatable(out,
@@ -501,7 +502,7 @@ shinyApp(
                         `Reviewer Affiliation` = input$affiliation,
                         `Scientific Name` = sub(pattern = ".*>(.+)</a>.*", x = `Scientific Name`, replacement = "\\1") #find text in between >link text</a>
           ) %>% 
-          dplyr::select(Date, `Reviewer Name`, `Reviewer Email`, `Reviewer Affiliation`, `Scientific Name`, `NatureServe Common Name`, `Provisional Tier`, `Practical Cons BLM Score`,	`Multispecies Benefit BLM Score`,	`Partnering Opps BLM Score`, `Notes`)
+          dplyr::select(Date, `Reviewer Name`, `Reviewer Email`, `Reviewer Affiliation`, `Scientific Name`, `NatureServe Common Name`, `Provisional Tier`, `Practical Cons BLM Score`,	`Multispecies Benefit BLM Score`,	`Partnering Opps BLM Score`, `Reviewer Suggested Tier`, `Notes`)
         
         sheet_append(ss = "https://docs.google.com/spreadsheets/d/1KIpQPLvHiJY1KvbGY3P04HwU2WESqKOQZYECpN_dxgo/edit?usp=sharing", data = reviewed_scores, sheet = "suggested_scores")
         # session$reload()
