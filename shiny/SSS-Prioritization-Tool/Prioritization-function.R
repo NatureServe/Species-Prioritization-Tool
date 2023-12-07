@@ -84,6 +84,100 @@ prioritize <- function (data, species, threshold.eo, threshold.model, threshold.
                                                                   ifelse(is.na(results$F_Partnering_Ops), paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is imperiled (ESA listed, under review, or G1/G2). There is sufficient conservation practicability. It does not have a restricted range. There are multispecies benefits to its conservation. Partnering opportunities are unknown."),
                                                                          ifelse(results$F_Partnering_Ops, paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is imperiled (ESA listed, under review, or G1/G2). There is sufficient conservation practicability. It does not have a restricted range. There are multispecies benefits to its conservation. There are partnering opportunities for its conservation."), paste0("The ", results$NatureServe_Common_Name," has high occurence on BLM-managed lands. It is imperiled (ESA listed, under review, or G1/G2). There is sufficient conservation practicability. It does not have a restricted range. There are multispecies benefits to its conservation. There are limited partnering opportunities for its conservation.")))))))))
   
+  results$Tier_path <- NA
+  results$Tier_path_fig <- NA
+
+  # Tier path: Tier 4 Riparian Step A1
+  if (results$Riparian & !results$`A_Management_Responsibility` & results$Percent_EOs_BLM_2019 <= 15){
+    results$Tier_path <- paste0("This is a riparian taxon with less than 15% of element occurrences overlapping BLM lands: this taxon is Tier 4 Step A1")
+    results$Tier_path_fig <- "Tier 4 Riparian Step A1"
+  }
+  # Tier path: Tier 4 Non-Riparian Step A1 (EO-based)
+  if (!results$Riparian & !results$`A_Management_Responsibility`& results$Percent_EOs_BLM_2019 <= 10){
+    results$Tier_path <- paste0("This is a non-riparian taxon with less than 10% of element occurrences overlapping BLM lands: this taxon is Tier 4 Step A1")
+    results$Tier_path_fig <- "Tier 4 Non-Riparian Step A1"
+  }
+  # Tier path: Tier 4 Non-Riparian Step A1 (model-based)
+  if (!results$Riparian & !results$`A_Management_Responsibility` & results$Percent_Model_Area_BLM < threshold.model){
+    results$Tier_path <- paste0("This is a non-riparian taxon with less than", threshold.model, "% of element occurrences overlapping BLM lands: this taxon is Tier 4 Step A1")
+    results$Tier_path_fig <- "Tier 4 Non-Riparian Step A1"
+  }
+  # Tier path: Tier 4 Non-Riparian Step A1 (AB EO-based)
+  if (!results$Riparian & !results$`A_Management_Responsibility` & results$Percent_AB_EOs_BLM < threshold.eo.ab){
+    results$Tier_path <- paste0("This is a non-riparian taxon with less than", threshold.eo.ab, "% of AB element occurrences overlapping BLM lands: this taxon is Tier 4 Step A1")
+    results$Tier_path_fig <- "Tier 4 Non-Riparian Step A1"
+  }
+  # Tier path: Tier 4 Riparian Step B1
+  if (results$Riparian & results$`A_Management_Responsibility` & !results$`B_Imperilment`){
+    results$Tier_path <- paste0("This is a riparian taxon with high BLM stewardship responsibility but it is not imperiled: this taxon is Tier 4 Step B1")
+    results$Tier_path_fig <- "Tier 4 Riparian Step A1"
+  }
+  # Tier path: Tier 4 Riparian Step B1
+  if (!results$Riparian & results$`A_Management_Responsibility` & !results$`B_Imperilment`){
+    results$Tier_path <- paste0("This is a non-riparian taxon with high BLM stewardship responsibility but it is not imperiled: this taxon is Tier 4 Step B1")
+    results$Tier_path_fig <- "Tier 4 Non-Riparian Step B1"
+  }
+  # Tier path: Tier 3 Riparian Step C
+  if (results$Riparian & results$`A_Management_Responsibility` & results$`B_Imperilment` & !results$C_Practicability){
+    results$Tier_path <- paste0("This taxon is riparian, has high BLM stewardship responsibility, and is imperiled, but it has low practicability for conservation actions: this taxon is Tier 3 Step C")
+    results$Tier_path_fig <- "Tier 3 Riparian Step C"
+  }
+  # Tier path: Tier 3 Non-Riparian Step C
+  if (!results$Riparian & results$`A_Management_Responsibility` & results$`B_Imperilment` & !results$C_Practicability){
+    results$Tier_path <- paste0("This taxon is non-riparian, has high BLM stewardship responsibility, and is imperiled, but it has low practicability for conservation actions: this taxon is Tier 3 Step C")
+    results$Tier_path_fig <- "Tier 3 Non-Riparian Step C"
+  }
+  # Tier path: Tier 3 Tier 1 Riparian Step D1
+  if (results$Riparian & results$`A_Management_Responsibility` & results$`B_Imperilment` & results$C_Practicability & results$NS_Range_Restricted & results$BLM_Threats){
+    results$Tier_path <- paste0("This taxon is riparian, has high BLM stewardship responsibility, is imperiled, and has high practicability for conservation actions, is range-restricted, and its primary threats are under BLM control: this taxon is Tier 1 Step D1")
+    results$Tier_path_fig <- "Tier 1 Riparian Step D1"
+  }
+  # Tier path: Tier 3 Riparian Step C
+  if (!results$Riparian & results$`A_Management_Responsibility` & results$`B_Imperilment` & results$C_Practicability & results$NS_Range_Restricted & results$BLM_Threats){
+    results$Tier_path <- paste0("This taxon is non-riparian, has high BLM stewardship responsibility, is imperiled, and has high practicability for conservation actions, is range-restricted, and its primary threats are under BLM control: this taxon is Tier 1 Step D1")
+    results$Tier_path_fig <- "Tier 1 Non-Riparian Step D1"
+  }
+  # Tier path: Tier 2 Riparian Step D1
+  if (results$Riparian & results$`A_Management_Responsibility` & results$`B_Imperilment` & results$C_Practicability & results$NS_Range_Restricted & !results$BLM_Threats){
+    results$Tier_path <- paste0("This taxon is riparian, has high BLM stewardship responsibility, is imperiled, and has high practicability for conservation actions, is range-restricted, but its primary threats are not under BLM control: this taxon is Tier 2 Step D1")
+    results$Tier_path_fig <- "Tier 2 Riparian Step D1"
+  }
+  # Tier path: Tier 2 Non-Riparian Step D1
+  if (!results$Riparian & results$`A_Management_Responsibility` & results$`B_Imperilment` & results$C_Practicability & results$NS_Range_Restricted & !results$BLM_Threats){
+    results$Tier_path <- paste0("This taxon is non-riparian, has high BLM stewardship responsibility, is imperiled, and has high practicability for conservation actions, is range-restricted, but its primary threats are not under BLM control: this taxon is Tier 2 Step D1")
+    results$Tier_path_fig <- "Tier 2 Non-Riparian Step D1"
+  }
+  # Tier path: Tier 3 Tier 2 Riparian Step E
+  if (results$Riparian & results$`A_Management_Responsibility` & results$`B_Imperilment` & results$C_Practicability & !results$NS_Range_Restricted & !results$E_Multispecies_Benefits){
+    results$Tier_path <- paste0("This taxon is riparian, has high BLM stewardship responsibility, is imperiled, and has high practicability for conservation actions, is not range-restricted, but there are no sufficient multispecies benefits to its conservation: this taxon is Tier 2 Step E")
+    results$Tier_path_fig <- "Tier 2 Riparian Step E"
+  }
+  # Tier path:Tier 2 Non-Riparian Step E
+  if (!results$Riparian & results$`A_Management_Responsibility` & results$`B_Imperilment` & results$C_Practicability & !results$NS_Range_Restricted & !results$E_Multispecies_Benefits){
+    results$Tier_path <- paste0("This taxon is non-riparian, has high BLM stewardship responsibility, is imperiled, and has high practicability for conservation actions, is not range-restricted, but there are no sufficient multispecies benefits to its conservation: this taxon is Tier 2 Step E")
+    results$Tier_path_fig <- "Tier 2 Non-Riparian Step E"
+  }
+  # Tier path: Tier 2 Riparian Step F
+  if (results$Riparian & results$`A_Management_Responsibility` & results$`B_Imperilment` & results$C_Practicability & !results$NS_Range_Restricted & results$E_Multispecies_Benefits & !results$F_Partnering_Ops){
+    results$Tier_path <- paste0("This taxon is riparian, has high BLM stewardship responsibility, is imperiled, and has high practicability for conservation actions, is not range-restricted, there are sufficient multispecies benefits to its conservation, but partnering opportunities are low or unknown: this taxon is Tier 2 Step F")
+    results$Tier_path_fig <- "Tier 2 Riparian Step F"
+  }
+  # Tier path:Tier 2 Non-Riparian Step F
+  if (!results$Riparian & results$`A_Management_Responsibility` & results$`B_Imperilment` & results$C_Practicability & !results$NS_Range_Restricted & results$E_Multispecies_Benefits & !results$F_Partnering_Ops){
+    results$Tier_path <- paste0("This taxon is non-riparian, has high BLM stewardship responsibility, is imperiled, and has high practicability for conservation actions, is not range-restricted, there are sufficient multispecies benefits to its conservation, but partnering opportunities are low or unknown: this taxon is Tier 2 Step F")
+    results$Tier_path_fig <- "Tier 2 Non-Riparian Step F"
+  }
+  # Tier path: Tier 1 Riparian Step F
+  if (results$Riparian & results$`A_Management_Responsibility` & results$`B_Imperilment` & results$C_Practicability & !results$NS_Range_Restricted & results$E_Multispecies_Benefits & results$F_Partnering_Ops){
+    results$Tier_path <- paste0("This taxon is riparian, has high BLM stewardship responsibility, is imperiled, has high practicability for conservation actions, is not range-restricted, there are sufficient multispecies benefits to its conservation, and there are sufficient partnering opportunities for its conservation: this taxon is Tier 2 Step F")
+    results$Tier_path_fig <- "Tier 1 Riparian Step F"
+  }
+  # Tier path: Tier 1 Non-Riparian Step F
+  if (!results$Riparian & results$`A_Management_Responsibility` & results$`B_Imperilment` & results$C_Practicability & !results$NS_Range_Restricted & results$E_Multispecies_Benefits & results$F_Partnering_Ops){
+    results$Tier_path <- paste0("This taxon is non-riparian, has high BLM stewardship responsibility, is imperiled, has high practicability for conservation actions, is not range-restricted, there are sufficient multispecies benefits to its conservation, and there are sufficient partnering opportunities for its conservation: this taxon is Tier 1 Step F")
+    results$Tier_path_fig <- "Tier 1 Non-Riparian Step F"
+  }
+
   ## Data deficient = data deficiency influences the tier
   ## Flagged if the lack of data brings the species into another Tier
   results$Data_Deficient <- ifelse(is.na(results$`A_Management_Responsibility`) | is.na(results$`B_Imperilment`), T,
@@ -92,6 +186,9 @@ prioritize <- function (data, species, threshold.eo, threshold.model, threshold.
                                                  )
                                           )
                                    )
+  
+  # Tier path: NatureServe Data Deficient
+  if (results$Data_Deficient) results$Tier_path <- paste0("BLM priority status could not be determined due to a lack of available spatial data: this taxon is NatureServe Data Deficient.")
   
   results
 }
